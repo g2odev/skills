@@ -10,6 +10,7 @@ A collection of agent skills and instructions for building WordPress themes (Roo
 | [tailwindcss](.github/skills/tailwindcss/SKILL.md) | Tailwind CSS v4 conventions and best practices |
 | [alpinejs](.github/skills/alpinejs/SKILL.md) | Alpine.js conventions and best practices |
 | [gsap](.github/skills/gsap/SKILL.md) | GSAP animation conventions and best practices |
+| [wordpress-theme](.github/skills/wordpress-theme/SKILL.md) | WordPress theme development with Sage, Blade and PHP 8.4 |
 
 ## Structure
 

@@ -36,6 +36,25 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
 
 ## Conventions
 
+### Base `<html>` element
+
+The `<html>` tag always carries the global base styling so the whole document inherits a consistent font, background, font weight, text color, antialiasing and text-selection style. Set these as Tailwind classes on `<html>`, using semantic theme tokens:
+
+```html
+<html class="font-sans relative bg-white font-normal text-black antialiased selection:bg-black selection:text-white">
+```
+
+Always include, in order:
+
+- **Font family** — `font-sans` (a `--font-*` token)
+- **Background** — `bg-white` (a `--color-*` token)
+- **Font weight** — `font-normal`
+- **Text color** — `text-black` (a `--color-*` token)
+- **Antialiasing** — `antialiased`
+- **Selection styling** — `selection:bg-black selection:text-white`
+
+Use only semantic tokens from `@theme` here; no loose hex values or raw font names.
+
 ### Class order
 
 Keep a fixed order (enforceable with `prettier-plugin-tailwindcss`):

@@ -9,6 +9,7 @@ description: 'GSAP conventions and best practices for animations. Use when creat
 
 - [GSAP docs](https://gsap.com/docs/v3/) — tweens, timelines, easing
 - [ScrollTrigger](https://gsap.com/docs/v3/Plugins/ScrollTrigger/) — scroll-based animations
+- [llms.txt](https://gsap.com/llms.txt) — full docs in LLM-friendly format; fetch for authoritative, up-to-date reference
 
 ## When to use
 

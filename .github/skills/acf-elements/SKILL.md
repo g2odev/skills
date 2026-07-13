@@ -22,6 +22,7 @@ description: 'Make Blade "elements" manageable through ACF using local JSON fiel
   - [Naming, language & escaping](#naming-language--escaping)
 - [Templates](#templates)
   - [Standalone group](#standalone-group--acf-jsongroup_uidjson)
+  - [Central "Elementen" group](#central-elementen-flexible-content-group--once-per-project)
   - [Layout entry](#layout-entry--inside-the-elementen-flexible-content-group)
   - [Blade partial](#blade-partial--partialselement1bladephp)
   - [Banner title fallback](#banner-title--fallback-to-the-post-title)
@@ -67,6 +68,8 @@ The loop is generic — `partials/elements.blade.php` walks the rows and include
   @endif
 @endwhile
 ```
+
+Page templates include this partial once — `@include('partials.elements')` — wherever the flexible content should render.
 
 Because the three names match (`elementN`), adding an element is purely additive: no central registry to edit by hand.
 
@@ -388,6 +391,49 @@ These are complete — they carry the default keys ACF writes itself (`aria-labe
   "show_in_rest": 0
 }
 ```
+
+### Central "Elementen" flexible content group — once per project
+
+The parent group that holds every layout. Created once (first element of the project), then only its `layouts` map grows. Unlike the standalone element groups this one is `"active": true` — it is the metabox the editor works in:
+
+```json
+{
+  "key": "group_<uid>",
+  "title": "Elementen",
+  "fields": [
+    {
+      "key": "field_<uid>",
+      "label": "Elementen",
+      "name": "elements",
+      "aria-label": "",
+      "type": "flexible_content",
+      "instructions": "Voeg één of meer elementen toe aan de pagina.",
+      "required": 0,
+      "conditional_logic": 0,
+      "wrapper": { "width": "", "class": "", "id": "" },
+      "allow_in_bindings": 0,
+      "layouts": {
+        "layout_<uid>": { "…": "one layout entry per element — see below" }
+      },
+      "button_label": "Element toevoegen",
+      "min": "",
+      "max": ""
+    }
+  ],
+  "location": [[{ "param": "post_type", "operator": "==", "value": "post" }]],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0
+}
+```
+
+The `layouts` value is a **map keyed by each layout's `key`**, not an array.
 
 ### Layout entry — inside the "Elementen" flexible content group
 

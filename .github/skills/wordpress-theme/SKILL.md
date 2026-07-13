@@ -48,6 +48,8 @@ description: 'WordPress theme development conventions and best practices with Ro
 
 - Follow the template hierarchy with Blade equivalents: `index.blade.php`, `page.blade.php`, `single-{cpt}.blade.php`
 - Extract repeated markup into partials (`@include('partials.card')`) or components (`<x-button>`)
+- Register nav menus in `app/setup.php` (`register_nav_menus(['primary_navigation' => __('Primary Navigation', 'theme-name')])`) and render them in a partial (`partials/navigation.blade.php`) — never hardcode menu items
+- The `/styleguide` page (required per project, see `AGENTS.md`) is a Blade page template: `resources/views/template-styleguide.blade.php` with a `{{-- Template Name: Styleguide --}}` header
 - Escape all output: `{{ $var }}` escapes automatically in Blade and is the default for untrusted values; `{!! !!}` is for trusted content — sanitized HTML (`wp_kses_post()`), WP titles (`get_the_title()` returns texturized entities that `{{ }}` would double-escape) and ACF element fields (trusted editor content, see the [acf-elements](../acf-elements/SKILL.md) skill). URLs and attributes always go through `esc_url()` / `esc_attr()`
 - Always check a variable is set and not empty before outputting it:
 

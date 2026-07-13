@@ -34,7 +34,7 @@ description: 'GSAP conventions and best practices for animations. Use when creat
 
 ## Core principles
 
-1. **GSAP for all animations** — no CSS `transition`/`@keyframes`; a single animation system keeps everything consistent and manageable.
+1. **GSAP for all animations** — no CSS `@keyframes`; a single animation system keeps everything consistent and manageable. The one exception: simple hover/focus state changes (color, opacity) on buttons and links use Tailwind `transition-*` classes — driving those through GSAP is overkill.
 2. **Animate `transform` and `opacity`** — `x`, `y`, `scale`, `rotation`, `opacity` are GPU-friendly. Avoid animating layout properties (`width`, `height`, `top`, `left`); they force a reflow on every frame. The one accepted exception is a collapsing panel (accordion, dropdown) where the content height is unknown: there `height: 'auto'` has no transform equivalent — see [Working with Alpine.js](#working-with-alpinejs).
 3. **Target via data attributes** — use `data-*` attributes as animation hooks, not HTML classes. Classes are for styling (Tailwind); data attributes make the animation intent explicit and don't break on restyling:
 
@@ -109,7 +109,7 @@ gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
 
 | Avoid | Do instead |
 |---|---|
-| CSS transitions/keyframes alongside GSAP | Everything via GSAP |
+| CSS keyframes or transitions for real animations | GSAP — only hover/focus state changes use `transition-*` |
 | Targeting HTML classes (`.hero-title`) | Data attributes (`[data-animate="hero-title"]`) |
 | Animating `width`/`height`/`top`/`left` | `x`, `y`, `scale`, `opacity` — only a collapsing panel's `height` is exempt |
 | Separate tweens with stacked `delay`s | Timeline with position parameters (`'-=0.3'`) |

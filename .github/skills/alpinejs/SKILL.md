@@ -11,6 +11,7 @@ description: 'Alpine.js conventions and best practices. Use when adding interact
 - [When to use](#when-to-use)
 - [Core principles](#core-principles)
 - [Conventions](#conventions)
+  - [Setup](#setup)
   - [Directives](#directives)
   - [Event modifiers](#event-modifiers)
   - [x-show vs x-if](#x-show-vs-x-if)
@@ -51,6 +52,21 @@ description: 'Alpine.js conventions and best practices. Use when adding interact
    ```
 
 ## Conventions
+
+### Setup
+
+Alpine is bundled through Vite in `resources/js/app.js` — no CDN script tag:
+
+```js
+import Alpine from 'alpinejs';
+import focus from '@alpinejs/focus';
+
+window.Alpine = Alpine;
+Alpine.plugin(focus);
+Alpine.start();
+```
+
+Register plugins (`@alpinejs/focus` for `x-trap`, `@alpinejs/collapse`, `@alpinejs/intersect`, …) before `Alpine.start()`, and define `Alpine.data()` components inside an `alpine:init` listener so they exist before Alpine scans the DOM.
 
 ### Directives
 

@@ -38,7 +38,7 @@ These are the always-on rules; the skills above hold the detail and the examples
 - Prefer existing Tailwind classes; avoid arbitrary values (`m-[80px]`) when a standard class exists (`m-20`). When a design value is within a few pixels of a standard class, snap to that class; only when it deviates too much, use an arbitrary (rem) value
 - Use `rem` for values, not `px` or `em` — just like the Tailwind scale itself (e.g. `m-[5.5rem]` instead of `m-[88px]`, and rem values in `@theme`)
 - Use Alpine.js directives (`x-data`, `x-on`, `x-show`, ...) for UI behavior
-- Use GSAP (with ScrollTrigger where needed) for all animations and transitions
+- Use GSAP (with ScrollTrigger where needed) for all animations and transitions. One exception: simple hover/focus state changes (color, opacity) on buttons and links use Tailwind `transition-*` classes — GSAP is for real animations (movement, reveals, timelines)
 - Target GSAP animations via `data-*` attributes (`[data-animate="hero-title"]`), never via HTML classes — classes are for styling
 - Define colors and fonts as semantic tokens in `@theme`; no loose hex values or font names in the markup
 - Define color tokens in `oklch` (`--color-brand: oklch(0.65 0.2 250)`), not hex or `rgb()` — perceptually uniform, wider gamut, and the format Tailwind v4 itself uses

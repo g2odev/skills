@@ -158,6 +158,7 @@ Then define colors as semantic theme tokens and swap them under `.dark`, so you 
 
 - Use `hover:`, `focus-visible:` (not `focus:` for keyboard focus), `disabled:`, `aria-*:` and `data-*:` variants
 - Group/peer for parent-child interaction: `group-hover:`, `peer-checked:`
+- Simple state changes (color, opacity) may ease with `transition-colors`/`transition-opacity` — the accepted exception to "all animation via GSAP"; anything that moves or reveals is GSAP territory
 
 ### Arbitrary values: sparingly
 

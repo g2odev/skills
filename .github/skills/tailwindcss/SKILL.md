@@ -137,7 +137,13 @@ Never use `sm:` to target "mobile" — that is desktop-first thinking.
 
 ### Dark mode
 
-Use `dark:` variants and define colors as semantic theme tokens so you don't have to repeat `dark:` everywhere:
+In v4 the `dark:` variant follows `prefers-color-scheme` by default. For a class-toggled dark mode, redefine the variant first:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+Then define colors as semantic theme tokens and swap them under `.dark`, so you don't have to repeat `dark:` on every element:
 
 ```css
 @theme {

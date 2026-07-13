@@ -155,7 +155,13 @@ Use `dark:` variants and define colors as semantic theme tokens so you don't hav
 
 ### Arbitrary values: sparingly
 
-Always use the existing Tailwind scale when available: `m-20` instead of `m-[80px]`. `w-[347px]` is a code smell — add recurring values to `@theme`. Arbitrary values only for true one-offs without a standard equivalent.
+Work down this ladder — most design values stop at step 1 or 2:
+
+1. **Exact match** — the value maps to a standard class: 80px → `m-20`. Use it.
+2. **A few pixels off** — snap to the nearest standard class: 82px → `m-20`, 13px → `text-sm`. Design files are rarely that precise on purpose, and snapping keeps the spacing rhythm consistent.
+3. **Genuinely off the scale** — only when the value deviates too much to snap, use an arbitrary value in rem (see [Units: rem](#units-rem)): 88px sits between `m-20` (80px) and `m-24` (96px), so `m-[5.5rem]`. If the same arbitrary value recurs, promote it to a `@theme` token instead of repeating the class.
+
+`w-[347px]` is a code smell — snap it to the scale or turn it into a token.
 
 ### Units: rem
 
@@ -186,6 +192,7 @@ For large blocks of (CMS/markdown) text, use the [`@tailwindcss/typography` plug
 | `!important` / `!` prefix | Fix specificity conflicts at the source |
 | Long unreadable class strings | Fixed class order + Prettier plugin |
 | Hardcoded colors (`text-[#3b82f6]`) | Theme tokens (`text-brand`) |
+| An arbitrary value a few pixels from a standard class (`m-[5.125rem]`) | Snap to the nearest class (`m-20`) |
 | Hex or `rgb()` in `@theme` (`--color-brand: #3b82f6`) | oklch (`--color-brand: oklch(0.65 0.2 250)`) |
 | `style=""` alongside Tailwind | Everything in classes; arbitrary values if needed |
 | Styling each element separately in long text blocks | `prose` (typography plugin) |

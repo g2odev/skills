@@ -64,7 +64,7 @@ description: 'Alpine.js conventions and best practices. Use when adding interact
 | `x-model` | Two-way binding on form fields |
 | `x-text` / `x-html` | Setting text/HTML — never `x-html` with user input (XSS) |
 | `x-ref` / `$refs` | Element references instead of `querySelector` |
-| `x-cloak` | Prevent flash-of-unstyled-content (with matching CSS) |
+| `x-cloak` | Hide until Alpine initializes — rarely needed here, since GSAP owns initial states (see [Preventing FOUC](../gsap/SKILL.md#preventing-fouc)); if used, it needs the one-liner `[x-cloak] { display: none; }` in `app.css` |
 
 ### Event modifiers
 

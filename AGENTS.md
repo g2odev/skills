@@ -64,7 +64,7 @@ Adjust per project; typical Sage setup:
 Sage conventions:
 
 - Blade templates in `resources/views/`, partials in `resources/views/partials/`, components in `resources/views/components/`
-- Any custom JS in a single `resources/js/app.js`, any custom CSS in a single `resources/css/app.css`
+- Any custom JS in a single `resources/js/app.js`; any custom CSS in a single stylesheet (`resources/css/app.css`, or a `custom.scss` where the theme ships one) — keep it as empty as possible: styling is solved with existing Tailwind classes or arbitrary values in the markup, and in practice only the Gravity Forms styles belong in the stylesheet
 - PHP theme logic in `app/` (e.g. `setup.php`, `filters.php`, View Composers in `app/View/Composers/`)
 - The preference always remains: solve it with Tailwind classes or Alpine directives in the markup; use `app.js`/`app.css` only when there is no other way
 

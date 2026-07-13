@@ -51,7 +51,7 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
 
 2. **Utility-first** — style in the markup, not with custom CSS. Every class in the markup is a Tailwind class: an existing utility first, an arbitrary value when the scale has nothing — never a self-invented class name, whatever its purpose (a card, a heading style, a container width): it is defined nowhere and renders as nothing. A repeated class set is a missing Blade component, not a missing CSS class; a hook for JS/GSAP is a `data-*` attribute, never a class.
 
-3. **No `@apply`, no custom CSS** — there is exactly one accepted exception, and it is not a judgement call: Gravity Forms renders its own markup, so its output is styled centrally in `app.css` using semantic `@theme` tokens (see the Forms section in `AGENTS.md`). Everything else stays in utility classes.
+3. **No `@apply`, no custom CSS** — there is exactly one accepted exception, and it is not a judgement call: Gravity Forms renders its own markup, so its output is styled centrally in `app.css` using semantic `@theme` tokens (see the Forms section in `AGENTS.md`). Everything else stays in utility classes. The theme's custom stylesheet (`app.css`/`custom.scss`) stays as empty as possible — when it grows, styling is leaking out of the markup: move it back to existing utilities or arbitrary values.
 
 ## Conventions
 
@@ -195,6 +195,7 @@ For large blocks of (CMS/markdown) text, use the [`@tailwindcss/typography` plug
 | Avoid | Do instead |
 |---|---|
 | `@apply` or custom CSS | Utility classes; extract repetition to a component. Gravity Forms styling in `app.css` is the only exception |
+| A growing `app.css`/`custom.scss` | Keep it near-empty — styling lives in the markup: existing utilities first, else arbitrary values |
 | One container wrapping the whole site | One container per section, so elements can break out full-width |
 | `!important` / `!` prefix | Fix specificity conflicts at the source |
 | Long unreadable class strings | Fixed class order + Prettier plugin |

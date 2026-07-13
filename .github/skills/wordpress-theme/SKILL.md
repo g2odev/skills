@@ -37,7 +37,7 @@ description: 'WordPress theme development conventions and best practices with Ro
 
 ## Core principles
 
-1. **Sage structure** — Blade templates in `resources/views/`, logic in `app/`, assets via Vite. Never raw PHP templates in the theme root.
+1. **Sage structure** — Blade templates in `resources/views/`, logic in `app/`, assets via Vite. Never raw PHP templates in the theme root. The theme's custom stylesheet (`resources/css/app.css` / `custom.scss`) stays as empty as possible: styling lives as Tailwind classes in the Blade markup (existing classes first, arbitrary values otherwise) — in practice only the Gravity Forms styles belong in the stylesheet.
 2. **Templates stay dumb** — no queries or business logic in Blade. Prepare data in View Composers (`app/View/Composers/`); templates only display it.
 3. **Modern PHP 8.4** — typed properties, return types, enums, `match`, named arguments, constructor property promotion. No legacy array-style config where a typed class works.
 4. **Hook into WordPress, never hack it** — use actions/filters in `app/setup.php` or `app/filters.php`; never modify core, plugins or the parent framework.

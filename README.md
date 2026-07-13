@@ -42,7 +42,7 @@ skills/
 
 - **AGENTS.md**: copy to the root of your project; it is loaded automatically on every request
 - **Skills**: copy or symlink `.github/skills/` into your project — they are loaded on demand
-- **Note**: the skill links in AGENTS.md are relative to this repo (`tailwindcss/SKILL.md`); after copying to a project, update them to match the skills location there (e.g. `.github/skills/tailwindcss/SKILL.md`)
+- **Note**: the skill links in AGENTS.md point to `.github/skills/…` — the same layout as this repo, so copying AGENTS.md and `.github/skills/` together keeps them working; only update the links if the project stores its skills somewhere else
 
 ## License
 

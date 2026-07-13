@@ -13,6 +13,7 @@ description: 'Make Blade "elements" manageable through ACF using local JSON fiel
 - [Conventions](#conventions)
   - [Workflow — generate ACF JSON from a Blade element](#workflow--generate-acf-json-from-a-blade-element)
   - [Field-type mapping](#field-type-mapping)
+  - [Grouping related fields](#grouping-related-fields)
   - [Descriptions & placeholders](#descriptions--placeholders)
   - [Predefined descriptions per field type](#predefined-descriptions-per-field-type)
   - [Populated (dynamic) fields](#populated-dynamic-fields)
@@ -81,11 +82,12 @@ Given an element partial (e.g. `element1.blade.php`), generate its field group:
 
 1. **Read the partial** and collect every sub-field access `$elementN['<name>']` plus any `have_rows('<name>')` (a repeater) inside it. The array key = the ACF field `name`.
 2. **Infer the ACF type** for each key from how it is used — see [Field-type mapping](#field-type-mapping).
-3. **Write a description and placeholder for every field**: give each field a clear `instructions` sentence, and — for every field type that supports it (text, textarea, email, url, number, password) — a `placeholder` starting with `Bijvoorbeeld: "…"`. **The placeholder text is the content the HTML element holds in the partial** (the example copy from the design): `<h2>Met de juiste kennis vooruit</h2>` becomes `"placeholder": "Bijvoorbeeld: \"Met de juiste kennis vooruit\""`. See [Descriptions & placeholders](#descriptions--placeholders).
-4. **Build the standalone group JSON** (`acf-json/group_<uid>.json`): a single `group` field named `elementN` whose `sub_fields` are the inferred fields, in the order they appear in the markup. `"active": false`.
-5. **Register the layout** in the central "Elementen" flexible content group: add a `layout` named `elementN` containing one `clone` field that clones the new group (`"display": "seamless"`, `"prefix_label": 0`, `"prefix_name": 0`).
-6. **Keys**: give every `key`, `group`, `layout` a fresh unique id (see [Keys](#keys)). Never reuse a key from another element.
-7. **Sync**: open Custom Fields → Field Groups in wp-admin and run *Sync available* — ACF picks up the new/changed JSON from `acf-json/` by itself. There is no built-in WP-CLI sync command; only use one if the project ships its own. Then verify the block renders in the editor.
+3. **Bundle related fields into a `group`** when they form one logical unit: an element that shows a contact person gets a single `contact` group holding the contact details and image, not five loose fields. Give the group its own `instructions` describing the unit (`Voeg de gegevens van de contactpersoon toe.`) — see [Grouping related fields](#grouping-related-fields).
+4. **Write a description and placeholder for every field**: give each field a clear `instructions` sentence, and — for every field type that supports it (text, textarea, email, url, number, password) — a `placeholder` starting with `Bijvoorbeeld: "…"`. **The placeholder text is the content the HTML element holds in the partial** (the example copy from the design): `<h2>Met de juiste kennis vooruit</h2>` becomes `"placeholder": "Bijvoorbeeld: \"Met de juiste kennis vooruit\""`. See [Descriptions & placeholders](#descriptions--placeholders).
+5. **Build the standalone group JSON** (`acf-json/group_<uid>.json`): a single `group` field named `elementN` whose `sub_fields` are the inferred fields, in the order they appear in the markup. `"active": false`.
+6. **Register the layout** in the central "Elementen" flexible content group: add a `layout` named `elementN` containing one `clone` field that clones the new group (`"display": "seamless"`, `"prefix_label": 0`, `"prefix_name": 0`).
+7. **Keys**: give every `key`, `group`, `layout` a fresh unique id (see [Keys](#keys)). Never reuse a key from another element.
+8. **Sync**: open Custom Fields → Field Groups in wp-admin and run *Sync available* — ACF picks up the new/changed JSON from `acf-json/` by itself. There is no built-in WP-CLI sync command; only use one if the project ships its own. Then verify the block renders in the editor.
 
 ### Field-type mapping
 
@@ -93,16 +95,87 @@ Infer the ACF `type` from the Blade usage:
 
 | Blade usage | ACF `type` | Notes |
 |---|---|---|
-| `{{ $el['title'] }}` short text | `text` | `required` when the markup has no `@if` guard |
-| `{{ $el['label'] }}` | `text` | optional intro/eyebrow |
+| `{!! $el['title'] !!}` short text | `text` | `required` when the markup has no `@if` guard |
+| `{!! $el['label'] !!}` | `text` | optional intro/eyebrow |
 | `{!! wp_kses_post($el['content']) !!}` rich text | `wysiwyg` | `"toolbar": "full"`, `"media_upload": 0` |
 | `esc_url($el['button']['url'])`, `['title']`, `['target']` | `link` | `"return_format": "array"` |
 | `wp_get_attachment_image($el['image'], …)` | `image` | `"return_format": "id"` — always; render through `wp_get_attachment_image()` so `srcset`/dimensions come for free |
+| `$el['contact']['name']`, `$el['contact']['image']`, … | `group` | related fields forming one unit — see [Grouping related fields](#grouping-related-fields) |
 | `@foreach ($el['items'] as $item)` / `have_rows('items')` | `repeater` | model each `$item['x']` as a sub-field |
 | `$el['x'] == 'value'` toggle/choice | `true_false` / `select` | choices from the compared values |
 | number used in markup | `number` | |
 
 When unsure, prefer `text` for single line and `wysiwyg` for multi-line/HTML content.
+
+### Grouping related fields
+
+When several fields form one logical unit, bundle them in a `group` sub-field instead of leaving them as a flat list. An element that shows a contact person gets one `contact` group holding the contact details and image: the editor sees them as one block in the admin, and the Blade side reads one nested array. Give the group its own `instructions` describing the unit as a whole:
+
+```json
+{
+  "key": "field_<uid>",
+  "label": "Contactpersoon",
+  "name": "contact",
+  "aria-label": "",
+  "type": "group",
+  "instructions": "Voeg de gegevens van de contactpersoon toe.",
+  "required": 0,
+  "conditional_logic": 0,
+  "wrapper": { "width": "", "class": "", "id": "" },
+  "allow_in_bindings": 0,
+  "layout": "block",
+  "sub_fields": [
+    {
+      "key": "field_<uid>",
+      "label": "Naam",
+      "name": "name",
+      "aria-label": "",
+      "type": "text",
+      "instructions": "Voer de naam van de contactpersoon in.",
+      "required": 1,
+      "conditional_logic": 0,
+      "wrapper": { "width": "", "class": "", "id": "" },
+      "allow_in_bindings": 0,
+      "default_value": "",
+      "maxlength": "",
+      "placeholder": "Bijvoorbeeld: \"Jan Jansen\"",
+      "prepend": "",
+      "append": ""
+    },
+    {
+      "key": "field_<uid>",
+      "label": "Afbeelding",
+      "name": "image",
+      "aria-label": "",
+      "type": "image",
+      "instructions": "Selecteer een afbeelding van de contactpersoon.",
+      "required": 0,
+      "conditional_logic": 0,
+      "wrapper": { "width": "", "class": "", "id": "" },
+      "allow_in_bindings": 0,
+      "return_format": "id",
+      "library": "all",
+      "preview_size": "medium"
+    }
+  ]
+}
+```
+
+Extend `sub_fields` the same way with the other unit fields (`role`, `phone`, `email`, …). In Blade the group is one nested array:
+
+```blade
+@if (!empty($element1['contact']))
+  <div class="...">
+    @if (!empty($element1['contact']['image']))
+      {!! wp_get_attachment_image($element1['contact']['image'], 'medium') !!}
+    @endif
+
+    @if (!empty($element1['contact']['name']))
+      <p class="...">{!! $element1['contact']['name'] !!}</p>
+    @endif
+  </div>
+@endif
+```
 
 ### Descriptions & placeholders
 
@@ -142,6 +215,8 @@ Every field starts from a **predefined default `instructions`** (and, where supp
 | `date_picker` | `Kies een datum.` | — |
 
 Mark optional fields by inserting `indien gewenst` (e.g. `Voeg indien gewenst een label toe aan het element.`).
+
+For a `group` that bundles a logical unit, describe the unit itself instead of the generic default: `Voeg de gegevens van de contactpersoon toe.` — the generic `Voeg informatie toe aan het element.` is only for the outer `elementN` wrapper group.
 
 ### Populated (dynamic) fields
 
@@ -206,7 +281,7 @@ When hand-editing JSON, match what the ACF UI writes so Local JSON stays diff-cl
 - **Language**: field `label`, `instructions` and `placeholder` are in Dutch; field `name`s are always English snake_case.
 - **Populated fields**: prefix any field whose choices are filled from PHP with `g2o_populate_` (e.g. `g2o_populate_forms`) and leave `"choices": []` in the JSON — see [Populated (dynamic) fields](#populated-dynamic-fields).
 - Give **every** field a description (`instructions`) and, where the type supports it, a `placeholder` (`Bijvoorbeeld: "…"`) taken from the text the HTML element holds in the partial — see [Descriptions & placeholders](#descriptions--placeholders).
-- Guard every output in Blade with `!empty()` and escape late: `{{ }}` for text, `esc_url()`/`esc_attr()` in attributes, `{!! !!}` only for the WYSIWYG field (`wp_kses_post()`) and for titles that fall back to `get_the_title()` — see [Banner title](#banner-title--fallback-to-the-post-title).
+- Guard every output in Blade with `!empty()`; echo field output with `{!! !!}` (trusted editor content — `{{ }}` would double-escape entities), use `esc_url()`/`esc_attr()` inside attributes and `wp_kses_post()` on the WYSIWYG field. Titles may fall back to `get_the_title()` — see [Banner title](#banner-title--fallback-to-the-post-title).
 - **Text domain**: a theme has exactly one text domain — the theme's folder name; the templates here write `theme-name` as a placeholder for it. `data-*` values are identifiers and are never translated.
 
 ## Templates
@@ -356,7 +431,7 @@ Every element partial follows the same skeleton:
 3. Open a `<section>` with `data-element="elementN"` — a plain slug used as a hook for GSAP/QA. It is an identifier, not UI copy, so never run it through `__()`.
 4. Include the `<x-element-id>` anchor component, wrapped in `Begin`/`End` comments.
 5. Wrap the markup in `Element #N: Begin` / `Element #N: End` comments.
-6. Guard every sub-field with its own `!empty()` and escape late: `{{ }}` for text fields, `esc_url()` / `esc_attr()` in attributes, and `{!! !!}` **only** for the WYSIWYG field (run it through `wp_kses_post()` if the content is not fully trusted).
+6. Guard every sub-field with its own `!empty()`. Field output is echoed with `{!! !!}` — element fields are trusted editor content and may contain entities or intentional markup that `{{ }}` would double-escape into visible `&amp;`/`&#8211;`. Use `esc_url()` / `esc_attr()` inside attributes, and run the WYSIWYG field through `wp_kses_post()`.
 
 Replace `theme-name` with the project's actual text domain: the theme's folder name.
 
@@ -372,14 +447,13 @@ Replace `theme-name` with the project's actual text domain: the theme's folder n
     {{-- Element #1: Begin --}}
     <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8">
       @if (!empty($element1['label']))
-        <p class="...">{{ $element1['label'] }}</p>
+        <p class="...">{!! $element1['label'] !!}</p>
       @endif
 
       @if (!empty($element1['title']))
-        <h2 class="...">{{ $element1['title'] }}</h2>
+        <h2 class="...">{!! $element1['title'] !!}</h2>
       @endif
 
-      {{-- WYSIWYG is the only field rendered unescaped --}}
       @if (!empty($element1['content']))
         <div class="prose ...">{!! wp_kses_post($element1['content']) !!}</div>
       @endif
@@ -439,11 +513,12 @@ Drop example text into the exact HTML spots the partial outputs each field. This
 | Mismatched names between layout, partial and group field | Use the exact same `elementN` in all three |
 | Fields without `instructions` or (where supported) `placeholder` | Describe every field; add `Bijvoorbeeld: "…"` placeholders |
 | Invented/lorem-ipsum placeholder text | The placeholder is the text the HTML element holds in the partial |
+| A flat list of loose fields for one logical unit | Bundle them in a `group` with its own `instructions` (e.g. `contact`) |
 | Dutch field `name`s, or English `instructions`/`placeholder` | Names always English snake_case; descriptions/placeholders in Dutch |
 | Hand-filling `choices` on a dynamic select | Prefix with `g2o_populate_`, keep `"choices": []`, fill via `acf/load_field` |
 | Stripping ACF's default keys when hand-editing JSON | Keep `aria-label`, `wrapper`, `conditional_logic`, `allow_in_bindings`, group `menu_order`/`modified` |
 | `get_field()`/`get_sub_field()` scattered without guards | Read once into `$elementN`, guard with `!empty()` |
-| `{!! !!}` on text fields, or unescaped attributes | `{{ }}` for text, `esc_url()`/`esc_attr()` in attributes; `{!! !!}` only for WYSIWYG and `get_the_title()` fallbacks |
+| Unescaped URLs or attributes (`href="{!! $url !!}"`) | `esc_url()` / `esc_attr()` inside attribute output |
 | `__()` around a `data-element` value or other identifier | Plain slug: `data-element="element1"` |
 | Hardcoding another project's text domain (`academies`, …) | Use the project's own text domain everywhere |
 

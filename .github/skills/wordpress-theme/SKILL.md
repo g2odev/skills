@@ -47,7 +47,7 @@ description: 'WordPress theme development conventions and best practices with Ro
 
 - Follow the template hierarchy with Blade equivalents: `index.blade.php`, `page.blade.php`, `single-{cpt}.blade.php`
 - Extract repeated markup into partials (`@include('partials.card')`) or components (`<x-button>`)
-- Escape all output: `{{ $var }}` escapes automatically in Blade; use `{!! !!}` only for trusted, sanitized HTML (e.g. `wp_kses_post()`) and for WP titles — `get_the_title()` returns texturized text (quotes/dashes as entities) that `{{ }}` would double-escape
+- Escape all output: `{{ $var }}` escapes automatically in Blade and is the default for untrusted values; `{!! !!}` is for trusted content — sanitized HTML (`wp_kses_post()`), WP titles (`get_the_title()` returns texturized entities that `{{ }}` would double-escape) and ACF element fields (trusted editor content, see the [acf-elements](../acf-elements/SKILL.md) skill). URLs and attributes always go through `esc_url()` / `esc_attr()`
 - Always check a variable is set and not empty before outputting it:
 
 ```blade
@@ -138,7 +138,7 @@ class Hero extends Composer
 |---|---|
 | Queries or logic in Blade templates | View Composers |
 | `query_posts()` | `WP_Query` + `wp_reset_postdata()` |
-| Echoing unescaped output | `{{ }}` / `esc_html()` / `esc_attr()` |
+| Echoing untrusted output unescaped | `{{ }}` / `esc_html()` / `esc_attr()` |
 | `get_field()` scattered in templates | Map fields in a View Composer |
 | Modifying core/plugin files | Actions and filters |
 | Hardcoded strings | `__('...', 'theme-name')` |

@@ -276,6 +276,7 @@ When hand-editing JSON, match what the ACF UI writes so Local JSON stays diff-cl
 
 - **Names must match everywhere**: layout `name` = partial filename (`element1` → `partials/element1.blade.php`) = the inner group field `name` read via `get_sub_field('element1')`.
 - **Partial skeleton**: define `$elementN = get_sub_field('elementN')` at the top (English name matching the element), wrap everything in `@if (!empty($elementN))`, add `data-element="elementN"` on the `<section>`, include `<x-element-id>` with `Begin`/`End` comments and bracket the markup with `Element #N: Begin` / `Element #N: End` comments — see the [Blade partial](#blade-partial--partialselement1bladephp) template.
+- **Section wrapper**: every element partial wraps in a `<section>`; vertical margin/padding and any full-width `bg-*` sit on the section, the container inside only centers and pads horizontally. A background that must stay contained goes on a div inside the container.
 - Keep `"prefix_name": 0` and `"display": "seamless"` on the clone, otherwise the sub-fields land under a prefixed key and `get_sub_field('element1')` returns nothing.
 - Set `"active": false` on every standalone element group so it never shows as its own metabox — it is only consumed through the clone.
 - **Language**: field `label`, `instructions` and `placeholder` are in Dutch; field `name`s are always English snake_case.
@@ -428,10 +429,11 @@ Every element partial follows the same skeleton:
 
 1. **Define the variable at the top** (English, matching the element name) with `get_sub_field('elementN')`.
 2. **Guard the whole element** with `@if (!empty($elementN))` — render nothing when empty.
-3. Open a `<section>` with `data-element="elementN"` — a plain slug used as a hook for GSAP/QA. It is an identifier, not UI copy, so never run it through `__()`.
+3. **The wrapper is always a `<section>`**, with `data-element="elementN"` — a plain slug used as a hook for GSAP/QA (an identifier, not UI copy, so never run it through `__()`). The section carries the vertical spacing (`my-*`/`py-*`) and the `bg-*` when the background must run full-width; a background that must stay contained goes on a div inside the container instead.
 4. Include the `<x-element-id>` anchor component, wrapped in `Begin`/`End` comments.
 5. Wrap the markup in `Element #N: Begin` / `Element #N: End` comments.
-6. Guard every sub-field with its own `!empty()`. Field output is echoed with `{!! !!}` — element fields are trusted editor content and may contain entities or intentional markup that `{{ }}` would double-escape into visible `&amp;`/`&#8211;`. Use `esc_url()` / `esc_attr()` inside attributes, and run the WYSIWYG field through `wp_kses_post()`.
+6. Inside comes the container (`mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8`) — it only centers and pads horizontally; never put margins, vertical padding or full-width backgrounds on it.
+7. Guard every sub-field with its own `!empty()`. Field output is echoed with `{!! !!}` — element fields are trusted editor content and may contain entities or intentional markup that `{{ }}` would double-escape into visible `&amp;`/`&#8211;`. Use `esc_url()` / `esc_attr()` inside attributes, and run the WYSIWYG field through `wp_kses_post()`.
 
 Replace `theme-name` with the project's actual text domain: the theme's folder name.
 
@@ -514,6 +516,8 @@ Drop example text into the exact HTML spots the partial outputs each field. This
 | Fields without `instructions` or (where supported) `placeholder` | Describe every field; add `Bijvoorbeeld: "…"` placeholders |
 | Invented/lorem-ipsum placeholder text | The placeholder is the text the HTML element holds in the partial |
 | A flat list of loose fields for one logical unit | Bundle them in a `group` with its own `instructions` (e.g. `contact`) |
+| Margin/padding or a full-width `bg-*` on the container | On the `<section>` wrapper; the container only centers and pads horizontally |
+| A `<div>` as the element wrapper | Always a `<section data-element="elementN">` |
 | Dutch field `name`s, or English `instructions`/`placeholder` | Names always English snake_case; descriptions/placeholders in Dutch |
 | Hand-filling `choices` on a dynamic select | Prefix with `g2o_populate_`, keep `"choices": []`, fill via `acf/load_field` |
 | Stripping ACF's default keys when hand-editing JSON | Keep `aria-label`, `wrapper`, `conditional_logic`, `allow_in_bindings`, group `menu_order`/`modified` |

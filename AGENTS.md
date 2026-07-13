@@ -70,6 +70,7 @@ Sage conventions:
 ## Layout
 
 - The container is always `mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8` — one pattern, used everywhere
+- Sections carry the vertical spacing (`my-*`/`py-*`) and the `bg-*` when the background must span full-width; the container inside only centers content and adds horizontal padding. A background that must stay contained goes on a div inside the container
 - Place the container inside a section/element, never wrap the entire website in one container. This keeps the freedom for elements (heroes, images, backgrounds) to break out of the container full-width:
 
 ```html

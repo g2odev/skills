@@ -199,6 +199,7 @@ For large blocks of (CMS/markdown) text, use the [`@tailwindcss/typography` plug
 | Long unreadable class strings | Fixed class order + Prettier plugin |
 | Hardcoded colors (`text-[#3b82f6]`) | Theme tokens (`text-brand`) |
 | An arbitrary value a few pixels from a standard class (`m-[5.125rem]`) | Snap to the nearest class (`m-20`) |
+| `h-6 w-6` on square elements | `size-6` |
 | Hex or `rgb()` in `@theme` (`--color-brand: #3b82f6`) | oklch (`--color-brand: oklch(0.65 0.2 250)`) |
 | `style=""` alongside Tailwind | Everything in classes; arbitrary values if needed |
 | Styling each element separately in long text blocks | `prose` (typography plugin) |

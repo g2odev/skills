@@ -27,8 +27,11 @@ Detailed conventions and best practices per tool:
 - [alpinejs](.github/skills/alpinejs/SKILL.md) — Alpine.js conventions and best practices
 - [gsap](.github/skills/gsap/SKILL.md) — GSAP animation conventions and best practices
 - [wordpress-theme](.github/skills/wordpress-theme/SKILL.md) — WordPress theme development with Sage, Blade and PHP 8.4
+- [acf-elements](.github/skills/acf-elements/SKILL.md) — ACF flexible-content elements made manageable via local JSON, generated from Blade partials
 
 ## Rules
+
+These are the always-on rules; the skills above hold the detail and the examples. Where a skill and this file disagree, **this file wins** — and the skill should be corrected.
 
 - Always use the latest (stable) versions of Tailwind CSS, Alpine.js and GSAP
 - Use Tailwind utility classes in the markup; avoid `@apply` and inline styles
@@ -65,16 +68,17 @@ Sage conventions:
 
 ## Layout
 
+- The container is always `mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8` — one pattern, used everywhere
 - Place the container inside a section/element, never wrap the entire website in one container. This keeps the freedom for elements (heroes, images, backgrounds) to break out of the container full-width:
 
 ```html
 <!-- Good: container per section -->
 <section class="bg-gray-100">
-  <div class="container mx-auto px-4">...</div>
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8">...</div>
 </section>
 
 <!-- Bad: entire site inside one container -->
-<div class="container mx-auto">
+<div class="mx-auto max-w-screen-2xl px-4">
   <section>...</section>
   <section>...</section>
 </div>
@@ -85,9 +89,11 @@ Sage conventions:
 ```html
 <section class="relative">
   <div id="about" class="invisible absolute inset-x-0 top-0 -mt-24 opacity-0 pointer-events-none" aria-hidden="true"></div>
-  <div class="container mx-auto px-4">...</div>
+  <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8">...</div>
 </section>
 ```
+
+In a WordPress theme this anchor div is the `<x-element-id>` component — see the [acf-elements](.github/skills/acf-elements/SKILL.md) skill.
 
 - Position `absolute` elements with `inset-0` (or `inset-x-0`/`inset-y-0`) and offset further with margins (`-mt-24`, `ml-8`); do not use offset values on `top`/`left`/`bottom`/`right` themselves:
 

@@ -5,6 +5,21 @@ description: 'GSAP conventions and best practices for animations. Use when creat
 
 # GSAP
 
+## Contents
+
+- [Documentation](#documentation)
+- [When to use](#when-to-use)
+- [Core principles](#core-principles)
+- [Conventions](#conventions)
+  - [Setup](#setup)
+  - [ScrollTrigger](#scrolltrigger)
+  - [Defaults & easing](#defaults--easing)
+  - [Preventing FOUC](#preventing-fouc)
+  - [Cleanup](#cleanup)
+  - [Accessibility](#accessibility)
+- [Anti-patterns](#anti-patterns)
+- [Working with Alpine.js](#working-with-alpinejs)
+
 ## Documentation
 
 - [GSAP docs](https://gsap.com/docs/v3/) — tweens, timelines, easing
@@ -20,7 +35,7 @@ description: 'GSAP conventions and best practices for animations. Use when creat
 ## Core principles
 
 1. **GSAP for all animations** — no CSS `transition`/`@keyframes`; a single animation system keeps everything consistent and manageable.
-2. **Animate `transform` and `opacity`** — `x`, `y`, `scale`, `rotation`, `opacity` are GPU-friendly. Avoid animating `width`, `height`, `top`, `left`.
+2. **Animate `transform` and `opacity`** — `x`, `y`, `scale`, `rotation`, `opacity` are GPU-friendly. Avoid animating layout properties (`width`, `height`, `top`, `left`); they force a reflow on every frame. The one accepted exception is a collapsing panel (accordion, dropdown) where the content height is unknown: there `height: 'auto'` has no transform equivalent — see [Working with Alpine.js](#working-with-alpinejs).
 3. **Target via data attributes** — use `data-*` attributes as animation hooks, not HTML classes. Classes are for styling (Tailwind); data attributes make the animation intent explicit and don't break on restyling:
 
    ```html
@@ -96,7 +111,7 @@ gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
 |---|---|
 | CSS transitions/keyframes alongside GSAP | Everything via GSAP |
 | Targeting HTML classes (`.hero-title`) | Data attributes (`[data-animate="hero-title"]`) |
-| Animating `width`/`height`/`top`/`left` | `x`, `y`, `scale`, `opacity` |
+| Animating `width`/`height`/`top`/`left` | `x`, `y`, `scale`, `opacity` — only a collapsing panel's `height` is exempt |
 | Separate tweens with stacked `delay`s | Timeline with position parameters (`'-=0.3'`) |
 | ScrollTrigger per element in a loop without cleanup | `gsap.context()` + `stagger` |
 | Animating without a reduced-motion check | `gsap.matchMedia()` |

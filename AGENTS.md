@@ -41,6 +41,7 @@ These are the always-on rules; the skills above hold the detail and the examples
 - Use GSAP (with ScrollTrigger where needed) for all animations and transitions
 - Target GSAP animations via `data-*` attributes (`[data-animate="hero-title"]`), never via HTML classes — classes are for styling
 - Define colors and fonts as semantic tokens in `@theme`; no loose hex values or font names in the markup
+- Define color tokens in `oklch` (`--color-brand: oklch(0.65 0.2 250)`), not hex or `rgb()` — perceptually uniform, wider gamut, and the format Tailwind v4 itself uses
 - Tailwind class order is enforced by `prettier-plugin-tailwindcss`
 - Use `prose` (`@tailwindcss/typography`) for large text blocks such as CMS or markdown content
 - Always write comments in English

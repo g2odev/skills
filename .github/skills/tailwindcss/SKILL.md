@@ -9,8 +9,9 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
 
 - [Documentation](#documentation)
 - [When to use](#when-to-use)
-- [Core principles (v4)](#core-principles-v4)
+- [Core principles](#core-principles)
 - [Conventions](#conventions)
+  - [Colors: oklch](#colors-oklch)
   - [Base `<html>` element](#base-html-element)
   - [Layout & container](#layout--container)
   - [Class order](#class-order)
@@ -34,7 +35,7 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
 - Reviewing or refactoring components for consistent Tailwind usage
 - Adding theming, dark mode or responsive design
 
-## Core principles (v4)
+## Core principles
 
 1. **CSS-first configuration** — no `tailwind.config.js` needed anymore. Configure in CSS via `@theme`:
 
@@ -54,15 +55,42 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
 
 ## Conventions
 
+### Colors: oklch
+
+Define every color token in `@theme` in **oklch**, not hex or rgb — this is the format Tailwind v4's own palette uses:
+
+```css
+@theme {
+  --color-brand: oklch(0.65 0.2 250);
+  --color-brand-dark: oklch(0.55 0.2 250);
+  --color-surface: oklch(1 0 0);
+  --color-error: oklch(0.58 0.22 27);
+  --color-success: oklch(0.7 0.17 145);
+}
+```
+
+Why oklch, in short:
+
+- **Perceptually uniform** — the same lightness step looks like the same step to the eye, so a scale (`-100` … `-900`) can be built by varying `L` while keeping `C`/`H` fixed. With hex you are guessing.
+- **Wider gamut** — reaches P3 colors that hex simply cannot express, and degrades gracefully on sRGB screens.
+- **Readable intent** — `oklch(L C H)` is lightness, chroma, hue: a hover state is "the same color, a bit darker" (lower `L`), not a new hex value.
+
+Rules of thumb:
+
+- Convert design-tool hex values to oklch once, when defining the token — not on every use
+- Keep hue (`H`) constant within one color family; vary lightness (`L`) for the scale and chroma (`C`) for saturation
+- Alpha stays available: `oklch(0.65 0.2 250 / 50%)`, or use Tailwind's `/` opacity modifier (`bg-brand/50`)
+- Never write a raw color (hex, `rgb()`, oklch or otherwise) in the markup — always through a semantic token
+
 ### Base `<html>` element
 
 The `<html>` tag always carries the global base styling so the whole document inherits a consistent font, background, font weight, text color, antialiasing and text-selection style. Set these as Tailwind classes on `<html>`, using semantic theme tokens:
 
 ```html
-<html class="font-sans relative bg-white font-normal text-black antialiased selection:bg-black selection:text-white">
+<html class="bg-white font-sans font-normal text-black antialiased selection:bg-black selection:text-white">
 ```
 
-Always include, in order:
+Always include (the Prettier plugin owns the literal class order):
 
 - **Font family** — `font-sans` (a `--font-*` token)
 - **Background** — `bg-white` (a `--color-*` token)
@@ -87,7 +115,7 @@ The layout rules are project-wide and live in `AGENTS.md` § Layout — they are
 
 ### Class order
 
-Keep a fixed order (enforceable with `prettier-plugin-tailwindcss`):
+Class order is enforced by `prettier-plugin-tailwindcss` — run the plugin and never hand-sort. As a mental model, the order it produces is roughly:
 
 ```
 layout → flex/grid → spacing → sizing → typography → colors → borders → effects → states/responsive
@@ -158,12 +186,12 @@ For large blocks of (CMS/markdown) text, use the [`@tailwindcss/typography` plug
 | `!important` / `!` prefix | Fix specificity conflicts at the source |
 | Long unreadable class strings | Fixed class order + Prettier plugin |
 | Hardcoded colors (`text-[#3b82f6]`) | Theme tokens (`text-brand`) |
+| Hex or `rgb()` in `@theme` (`--color-brand: #3b82f6`) | oklch (`--color-brand: oklch(0.65 0.2 250)`) |
 | `style=""` alongside Tailwind | Everything in classes; arbitrary values if needed |
 | Styling each element separately in long text blocks | `prose` (typography plugin) |
 | Dynamically composed classnames (`text-${color}-500`) | Full classnames, possibly via a map — otherwise purging breaks |
 
 ## Tooling
 
-- **Prettier**: `prettier-plugin-tailwindcss` for automatic class sorting
-- **Conditional classes**: `clsx` or `cva` (class-variance-authority) for variants
-- **Merge conflicts**: `tailwind-merge` when combining prop classes
+- **Prettier**: `prettier-plugin-tailwindcss` for automatic class sorting — the plugin's order is the source of truth, never hand-sort
+- **Conditional classes**: Blade's `@class([...])` directive server-side, Alpine's `:class` binding client-side — this stack has no React/JS component layer, so `clsx`, `cva` and `tailwind-merge` don't belong here

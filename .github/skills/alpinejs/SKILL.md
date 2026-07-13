@@ -90,17 +90,17 @@ Use modifiers instead of custom logic: `@click.outside`, `@keydown.escape`, `@su
 | Global variables for shared state | `Alpine.store()` |
 | `x-html` with untrusted data | `x-text` |
 | jQuery or vanilla event listeners alongside Alpine | Everything via `x-on` |
-| CSS transitions via `x-transition` for complex animations | GSAP (see [gsap skill](../gsap/SKILL.md)) |
+| `x-transition` for show/hide animations | GSAP — all animations go through one system (see [gsap skill](../gsap/SKILL.md)) |
 
 ## Working with GSAP
 
-Use Alpine for state and events, GSAP for the animation itself:
+Use Alpine for state and events, GSAP for the animation itself — not `x-show` + `x-transition`. The markup binds state and refs:
 
 ```html
-<div x-data="{ open: false }">
-  <button @click="open = !open; $dispatch('panel-toggle')">Toggle</button>
-  <div x-ref="panel">...</div>
+<div x-data="accordion">
+  <button @click="toggle" :aria-expanded="open">Toggle</button>
+  <div x-ref="panel" class="h-0 overflow-hidden">...</div>
 </div>
 ```
 
-Animate `$refs.panel` in an `Alpine.data()` component with `gsap.to()` instead of `x-show` + `x-transition`.
+The matching `Alpine.data('accordion')` component animates `$refs.panel` with `gsap.to()` — see the [gsap skill](../gsap/SKILL.md#working-with-alpinejs) for that side of the code.

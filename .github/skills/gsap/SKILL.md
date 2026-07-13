@@ -79,7 +79,7 @@ gsap.from('[data-animate="card"]', {
 ```
 
 - Set `start`/`end` explicitly; use `markers: true` only while debugging
-- `scrub: true` for scroll-linked animations, `toggleActions` for one-time triggers
+- `scrub: true` for scroll-linked animations; `toggleActions` for enter/leave-triggered animations (`'play none none reverse'` replays on scroll-back, `'play none none none'` fires once)
 
 ### Defaults & easing
 

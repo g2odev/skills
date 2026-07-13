@@ -25,7 +25,7 @@ Each skill lives in its own folder containing a `SKILL.md` file with instruction
 | `## Core principles` | The few ideas everything else follows from |
 | `## Conventions` | The actual rules, grouped in `###` subsections |
 | `## Anti-patterns` | Avoid/Do-instead table |
-| _(optional)_ | A closing section such as `## Tooling` or `## Related skills` |
+| _(optional)_ | Extra material between Conventions and Anti-patterns (e.g. `## Templates` in acf-elements) and/or a closing section: `## Tooling`, `## Working with …` or `## Related skills` |
 
 The layout mirrors a real project, so everything can be copied 1-on-1:
 

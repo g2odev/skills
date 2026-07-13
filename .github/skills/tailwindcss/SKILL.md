@@ -5,6 +5,24 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
 
 # Tailwind CSS
 
+## Contents
+
+- [Documentation](#documentation)
+- [When to use](#when-to-use)
+- [Core principles (v4)](#core-principles-v4)
+- [Conventions](#conventions)
+  - [Base `<html>` element](#base-html-element)
+  - [Layout & container](#layout--container)
+  - [Class order](#class-order)
+  - [Responsive: mobile-first](#responsive-mobile-first)
+  - [Dark mode](#dark-mode)
+  - [States](#states)
+  - [Arbitrary values: sparingly](#arbitrary-values-sparingly)
+  - [Units: rem](#units-rem)
+  - [Large text blocks: prose](#large-text-blocks-prose)
+- [Anti-patterns](#anti-patterns)
+- [Tooling](#tooling)
+
 ## Documentation
 
 - [Tailwind CSS docs](https://tailwindcss.com/docs) — utilities, `@theme`, v4 configuration
@@ -30,9 +48,9 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
    }
    ```
 
-2. **Utility-first** — style in the markup, not with custom CSS. Only create a component class (`@utility`) when a pattern is repeated literally 3+ times and can't be captured in a component.
+2. **Utility-first** — style in the markup, not with custom CSS. A repeated class set is a missing component, not a missing CSS class: extract it to a Blade partial or component.
 
-3. **Reuse via components, not via `@apply`** — extract repeated class sets to a (framework) component. Avoid `@apply` except for small, truly global base elements.
+3. **No `@apply`, no custom CSS** — there is exactly one accepted exception, and it is not a judgement call: Gravity Forms renders its own markup, so its output is styled centrally in `app.css` using semantic `@theme` tokens (see the Forms section in `AGENTS.md`). Everything else stays in utility classes.
 
 ## Conventions
 
@@ -54,6 +72,18 @@ Always include, in order:
 - **Selection styling** — `selection:bg-black selection:text-white`
 
 Use only semantic tokens from `@theme` here; no loose hex values or raw font names.
+
+### Layout & container
+
+The layout rules are project-wide and live in `AGENTS.md` § Layout — they are not repeated here, so there is one source of truth. In short: one container **per section** (`mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8`), never one container around the whole site; anchor navigation via a hidden anchor div instead of an `id` on the `<section>`; absolute elements positioned with `inset-0` and offset with margins.
+
+`max-w-screen-*` is not part of the v4 max-width scale in the docs — make sure the project defines the matching `--container-*` token in `@theme` so the class resolves:
+
+```css
+@theme {
+  --container-screen-2xl: 96rem;
+}
+```
 
 ### Class order
 
@@ -123,7 +153,8 @@ For large blocks of (CMS/markdown) text, use the [`@tailwindcss/typography` plug
 
 | Avoid | Do instead |
 |---|---|
-| `@apply` everywhere | Extract to components |
+| `@apply` or custom CSS | Utility classes; extract repetition to a component. Gravity Forms styling in `app.css` is the only exception |
+| One container wrapping the whole site | One container per section, so elements can break out full-width |
 | `!important` / `!` prefix | Fix specificity conflicts at the source |
 | Long unreadable class strings | Fixed class order + Prettier plugin |
 | Hardcoded colors (`text-[#3b82f6]`) | Theme tokens (`text-brand`) |

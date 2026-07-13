@@ -5,6 +5,19 @@ description: 'Alpine.js conventions and best practices. Use when adding interact
 
 # Alpine.js
 
+## Contents
+
+- [Documentation](#documentation)
+- [When to use](#when-to-use)
+- [Core principles](#core-principles)
+- [Conventions](#conventions)
+  - [Directives](#directives)
+  - [Event modifiers](#event-modifiers)
+  - [x-show vs x-if](#x-show-vs-x-if)
+  - [Accessibility](#accessibility)
+- [Anti-patterns](#anti-patterns)
+- [Working with GSAP](#working-with-gsap)
+
 ## Documentation
 
 - [Alpine.js docs](https://alpinejs.dev/start-here) — directives, magics, plugins

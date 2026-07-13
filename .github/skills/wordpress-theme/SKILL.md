@@ -47,15 +47,16 @@ description: 'WordPress theme development conventions and best practices with Ro
 
 - Follow the template hierarchy with Blade equivalents: `index.blade.php`, `page.blade.php`, `single-{cpt}.blade.php`
 - Extract repeated markup into partials (`@include('partials.card')`) or components (`<x-button>`)
-- Escape all output: `{{ $var }}` escapes automatically in Blade; use `{!! !!}` only for trusted, sanitized HTML (e.g. `wp_kses_post()`)
+- Escape all output: `{{ $var }}` escapes automatically in Blade; use `{!! !!}` only for trusted, sanitized HTML (e.g. `wp_kses_post()`) and for WP titles — `get_the_title()` returns texturized text (quotes/dashes as entities) that `{{ }}` would double-escape
 - Always check a variable is set and not empty before outputting it:
 
 ```blade
+{{-- WP titles carry texturized entities — echo unescaped to avoid double-escaping --}}
 @if(!empty($heroTitle))
-  <h1>{{ $heroTitle }}</h1>
+  <h1>{!! $heroTitle !!}</h1>
 @endif
 
-{{-- Only rich content is rendered unescaped, and only after sanitizing --}}
+{{-- Rich content is rendered unescaped only after sanitizing --}}
 @if(!empty($heroContent))
   <div class="prose">{!! wp_kses_post($heroContent) !!}</div>
 @endif

@@ -23,6 +23,7 @@ description: 'Make Blade "elements" manageable through ACF using local JSON fiel
   - [Standalone group](#standalone-group--acf-jsongroup_uidjson)
   - [Layout entry](#layout-entry--inside-the-elementen-flexible-content-group)
   - [Blade partial](#blade-partial--partialselement1bladephp)
+  - [Banner title fallback](#banner-title--fallback-to-the-post-title)
   - [Rendered example](#rendered-example--placeholders-filled-in)
 - [Anti-patterns](#anti-patterns)
 - [Related skills](#related-skills)
@@ -80,7 +81,7 @@ Given an element partial (e.g. `element1.blade.php`), generate its field group:
 
 1. **Read the partial** and collect every sub-field access `$elementN['<name>']` plus any `have_rows('<name>')` (a repeater) inside it. The array key = the ACF field `name`.
 2. **Infer the ACF type** for each key from how it is used — see [Field-type mapping](#field-type-mapping).
-3. **Write a description and placeholder for every field**: give each field a clear `instructions` sentence, and — for every field type that supports it (text, textarea, email, url, number, password) — a `placeholder` starting with `Bijvoorbeeld: "…"`. See [Descriptions & placeholders](#descriptions--placeholders).
+3. **Write a description and placeholder for every field**: give each field a clear `instructions` sentence, and — for every field type that supports it (text, textarea, email, url, number, password) — a `placeholder` starting with `Bijvoorbeeld: "…"`. **The placeholder text is the content the HTML element holds in the partial** (the example copy from the design): `<h2>Met de juiste kennis vooruit</h2>` becomes `"placeholder": "Bijvoorbeeld: \"Met de juiste kennis vooruit\""`. See [Descriptions & placeholders](#descriptions--placeholders).
 4. **Build the standalone group JSON** (`acf-json/group_<uid>.json`): a single `group` field named `elementN` whose `sub_fields` are the inferred fields, in the order they appear in the markup. `"active": false`.
 5. **Register the layout** in the central "Elementen" flexible content group: add a `layout` named `elementN` containing one `clone` field that clones the new group (`"display": "seamless"`, `"prefix_label": 0`, `"prefix_name": 0`).
 6. **Keys**: give every `key`, `group`, `layout` a fresh unique id (see [Keys](#keys)). Never reuse a key from another element.
@@ -108,7 +109,7 @@ When unsure, prefer `text` for single line and `wysiwyg` for multi-line/HTML con
 Every field must guide the editor, exactly like the example group:
 
 - **`instructions`** — a short, friendly sentence on every field describing what to enter (e.g. `"Voeg een titel toe aan het element."`). Mark optional fields with `"… indien gewenst …"`.
-- **`placeholder`** — on every field type that supports one (`text`, `textarea`, `email`, `url`, `number`, `password`), a concrete example starting with `Bijvoorbeeld: "…"`. Field types without placeholder support (`wysiwyg`, `image`, `link`, `select`, `true_false`, `repeater`, `group`) get only `instructions`.
+- **`placeholder`** — on every field type that supports one (`text`, `textarea`, `email`, `url`, `number`, `password`), a concrete example starting with `Bijvoorbeeld: "…"`. **Take the example from the partial itself**: the text the HTML element contains is the field's placeholder — don't invent new copy or lorem ipsum. Field types without placeholder support (`wysiwyg`, `image`, `link`, `select`, `true_false`, `repeater`, `group`) get only `instructions`.
 
 | Field type | `instructions` | `placeholder` |
 |---|---|---|
@@ -204,8 +205,8 @@ When hand-editing JSON, match what the ACF UI writes so Local JSON stays diff-cl
 - Set `"active": false` on every standalone element group so it never shows as its own metabox — it is only consumed through the clone.
 - **Language**: field `label`, `instructions` and `placeholder` are in Dutch; field `name`s are always English snake_case.
 - **Populated fields**: prefix any field whose choices are filled from PHP with `g2o_populate_` (e.g. `g2o_populate_forms`) and leave `"choices": []` in the JSON — see [Populated (dynamic) fields](#populated-dynamic-fields).
-- Give **every** field a description (`instructions`) and, where the type supports it, a `placeholder` (`Bijvoorbeeld: "…"`) — see [Descriptions & placeholders](#descriptions--placeholders).
-- Guard every output in Blade with `!empty()` and escape late: `{{ }}` for text, `esc_url()`/`esc_attr()` in attributes, `{!! !!}` only for the WYSIWYG field (`wp_kses_post()`).
+- Give **every** field a description (`instructions`) and, where the type supports it, a `placeholder` (`Bijvoorbeeld: "…"`) taken from the text the HTML element holds in the partial — see [Descriptions & placeholders](#descriptions--placeholders).
+- Guard every output in Blade with `!empty()` and escape late: `{{ }}` for text, `esc_url()`/`esc_attr()` in attributes, `{!! !!}` only for the WYSIWYG field (`wp_kses_post()`) and for titles that fall back to `get_the_title()` — see [Banner title](#banner-title--fallback-to-the-post-title).
 - **Text domain**: a theme has exactly one text domain — the theme's folder name; the templates here write `theme-name` as a placeholder for it. `data-*` values are identifiers and are never translated.
 
 ## Templates
@@ -394,25 +395,35 @@ Replace `theme-name` with the project's actual text domain: the theme's folder n
 @endif
 ```
 
+### Banner title — fallback to the post title
+
+The banner (the hero at the top of the page) always renders a title. When the editor leaves the ACF title empty, it falls back to the post title instead of rendering nothing:
+
+```blade
+<h1 class="...">{!! empty($banner['title']) ? get_the_title() : $banner['title'] !!}</h1>
+```
+
+Note the `{!! !!}`: `get_the_title()` returns texturized text — curly quotes, dashes and ampersands as HTML entities — which `{{ }}` would double-escape (the visitor would see a literal `&#8211;`). Any title output that falls back to `get_the_title()` is therefore echoed unescaped; both branches are trusted editor content.
+
 ### Rendered example — placeholders filled in
 
-Drop fake example text into the exact HTML spots the partial outputs each field. This makes it obvious where every field lands:
+Drop example text into the exact HTML spots the partial outputs each field. This makes it obvious where every field lands — and it is the **source of each field's `placeholder`**: the text an element holds here becomes `Bijvoorbeeld: "…"` in the generated JSON (compare the standalone group above):
 
 ```html
 <section class="relative my-12 lg:my-16" data-element="element1">
-  <!-- label -->
-  <p class="...">Lorem ipsum dolor sit amet</p>
+  <!-- label → placeholder: Bijvoorbeeld: "Gerichte trainingen met een praktisch resultaat" -->
+  <p class="...">Gerichte trainingen met een praktisch resultaat</p>
 
-  <!-- title -->
-  <h2 class="...">Consectetur adipiscing elit sed do</h2>
+  <!-- title → placeholder: Bijvoorbeeld: "Met de juiste kennis vooruit" -->
+  <h2 class="...">Met de juiste kennis vooruit</h2>
 
-  <!-- content → wysiwyg -->
+  <!-- content → wysiwyg (no placeholder support, instructions only) -->
   <div class="prose ...">
-    <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    <p>Onze trainingen combineren theorie met praktijk, zodat je het geleerde direct kunt toepassen in je eigen werk.</p>
   </div>
 
-  <!-- button → link -->
-  <a href="#" class="...">Lorem ipsum</a>
+  <!-- button → link (no placeholder support, instructions only) -->
+  <a href="#" class="...">Bekijk het aanbod</a>
 </section>
 ```
 
@@ -427,11 +438,12 @@ Drop fake example text into the exact HTML spots the partial outputs each field.
 | Registering these fields in PHP (`acf_add_local_field_group`) | Local JSON in `acf-json/`, versioned with the theme |
 | Mismatched names between layout, partial and group field | Use the exact same `elementN` in all three |
 | Fields without `instructions` or (where supported) `placeholder` | Describe every field; add `Bijvoorbeeld: "…"` placeholders |
+| Invented/lorem-ipsum placeholder text | The placeholder is the text the HTML element holds in the partial |
 | Dutch field `name`s, or English `instructions`/`placeholder` | Names always English snake_case; descriptions/placeholders in Dutch |
 | Hand-filling `choices` on a dynamic select | Prefix with `g2o_populate_`, keep `"choices": []`, fill via `acf/load_field` |
 | Stripping ACF's default keys when hand-editing JSON | Keep `aria-label`, `wrapper`, `conditional_logic`, `allow_in_bindings`, group `menu_order`/`modified` |
 | `get_field()`/`get_sub_field()` scattered without guards | Read once into `$elementN`, guard with `!empty()` |
-| `{!! !!}` on text fields, or unescaped attributes | `{{ }}` for text, `esc_url()`/`esc_attr()` in attributes; `{!! !!}` only for WYSIWYG |
+| `{!! !!}` on text fields, or unescaped attributes | `{{ }}` for text, `esc_url()`/`esc_attr()` in attributes; `{!! !!}` only for WYSIWYG and `get_the_title()` fallbacks |
 | `__()` around a `data-element` value or other identifier | Plain slug: `data-element="element1"` |
 | Hardcoding another project's text domain (`academies`, …) | Use the project's own text domain everywhere |
 

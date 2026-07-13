@@ -206,7 +206,7 @@ When hand-editing JSON, match what the ACF UI writes so Local JSON stays diff-cl
 - **Populated fields**: prefix any field whose choices are filled from PHP with `g2o_populate_` (e.g. `g2o_populate_forms`) and leave `"choices": []` in the JSON — see [Populated (dynamic) fields](#populated-dynamic-fields).
 - Give **every** field a description (`instructions`) and, where the type supports it, a `placeholder` (`Bijvoorbeeld: "…"`) — see [Descriptions & placeholders](#descriptions--placeholders).
 - Guard every output in Blade with `!empty()` and escape late: `{{ }}` for text, `esc_url()`/`esc_attr()` in attributes, `{!! !!}` only for the WYSIWYG field (`wp_kses_post()`).
-- **Text domain**: every translatable string uses the project's own text domain; the templates here write `theme-name` as a placeholder. `data-*` values are identifiers and are never translated.
+- **Text domain**: a theme has exactly one text domain — the theme's folder name; the templates here write `theme-name` as a placeholder for it. `data-*` values are identifiers and are never translated.
 
 ## Templates
 
@@ -357,7 +357,7 @@ Every element partial follows the same skeleton:
 5. Wrap the markup in `Element #N: Begin` / `Element #N: End` comments.
 6. Guard every sub-field with its own `!empty()` and escape late: `{{ }}` for text fields, `esc_url()` / `esc_attr()` in attributes, and `{!! !!}` **only** for the WYSIWYG field (run it through `wp_kses_post()` if the content is not fully trusted).
 
-Replace `theme-name` with the project's actual text domain.
+Replace `theme-name` with the project's actual text domain: the theme's folder name.
 
 ```blade
 @php($element1 = get_sub_field('element1'))

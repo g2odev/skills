@@ -122,7 +122,8 @@ class Hero extends Composer
 
 ### Translations
 
-- All strings translatable: `__('Read more', 'theme-name')`, `_x()`, `_n()` — use the theme name as text domain, consistently everywhere
+- All strings translatable: `__('Read more', 'theme-name')`, `_x()`, `_n()`
+- **Exactly one text domain per theme** — the theme's folder name (`wp-content/themes/<folder>` → `__('…', '<folder>')`), used verbatim in every translation call. Never a second domain in the same project; a mixed domain means those strings silently fall out of the theme's `.po`/`.mo` files
 - No hardcoded strings in templates, including `aria-label`s
 
 ### Custom post types & fields
@@ -140,6 +141,7 @@ class Hero extends Composer
 | `get_field()` scattered in templates | Map fields in a View Composer |
 | Modifying core/plugin files | Actions and filters |
 | Hardcoded strings | `__('...', 'theme-name')` |
+| More than one text domain in a theme | One domain — the theme folder name — in every translation call |
 | Manual `<img>` tags for attachments | `wp_get_attachment_image()` |
 
 ## Related skills

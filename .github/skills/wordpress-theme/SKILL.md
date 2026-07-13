@@ -5,6 +5,23 @@ description: 'WordPress theme development conventions and best practices with Ro
 
 # WordPress Theme (Roots Sage)
 
+## Contents
+
+- [Documentation](#documentation)
+- [When to use](#when-to-use)
+- [Core principles](#core-principles)
+- [Conventions](#conventions)
+  - [Templates & components](#templates--components)
+  - [Naming & comments](#naming--comments)
+  - [View Composers](#view-composers)
+  - [Queries](#queries)
+  - [Images](#images)
+  - [Security](#security)
+  - [Translations](#translations)
+  - [Custom post types & fields](#custom-post-types--fields)
+- [Anti-patterns](#anti-patterns)
+- [Related skills](#related-skills)
+
 ## Documentation
 
 - [Sage docs](https://roots.io/sage/docs/) — theme structure, Blade, View Composers, Acorn
@@ -35,7 +52,12 @@ description: 'WordPress theme development conventions and best practices with Ro
 
 ```blade
 @if(!empty($heroTitle))
-  <h1>{!! $heroTitle !!}</h1>
+  <h1>{{ $heroTitle }}</h1>
+@endif
+
+{{-- Only rich content is rendered unescaped, and only after sanitizing --}}
+@if(!empty($heroContent))
+  <div class="prose">{!! wp_kses_post($heroContent) !!}</div>
 @endif
 ```
 
@@ -117,5 +139,10 @@ class Hero extends Composer
 | Echoing unescaped output | `{{ }}` / `esc_html()` / `esc_attr()` |
 | `get_field()` scattered in templates | Map fields in a View Composer |
 | Modifying core/plugin files | Actions and filters |
-| Hardcoded strings | `__('...', 'themename')` |
+| Hardcoded strings | `__('...', 'theme-name')` |
 | Manual `<img>` tags for attachments | `wp_get_attachment_image()` |
+
+## Related skills
+
+- [acf-elements](../acf-elements/SKILL.md) — ACF flexible-content elements via local JSON. Flexible content is the one exception to "no `get_field()` in templates": sub-fields only exist inside the `have_rows()` loop, so each element partial reads its own `get_sub_field('elementN')`.
+- [tailwindcss](../tailwindcss/SKILL.md) — styling the Blade markup produced here.

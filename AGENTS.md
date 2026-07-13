@@ -35,6 +35,7 @@ These are the always-on rules; the skills above hold the detail and the examples
 
 - Always use the latest (stable) versions of Tailwind CSS, Alpine.js and GSAP
 - Use Tailwind utility classes in the markup; avoid `@apply` and inline styles
+- All styling is Tailwind classes: an existing class first, an arbitrary value when the scale has nothing — never a self-invented class name, of any kind (it is defined nowhere and renders as nothing). A repeated pattern becomes a Blade component, an animation hook a `data-*` attribute
 - Prefer existing Tailwind classes; avoid arbitrary values (`m-[80px]`) when a standard class exists (`m-20`). When a design value is within a few pixels of a standard class, snap to that class; only when it deviates too much, use an arbitrary (rem) value
 - Use `rem` for values, not `px` or `em` — just like the Tailwind scale itself (e.g. `m-[5.5rem]` instead of `m-[88px]`, and rem values in `@theme`)
 - Use Alpine.js directives (`x-data`, `x-on`, `x-show`, ...) for UI behavior

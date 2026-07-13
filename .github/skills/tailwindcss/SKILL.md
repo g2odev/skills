@@ -49,7 +49,7 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
    }
    ```
 
-2. **Utility-first** — style in the markup, not with custom CSS. A repeated class set is a missing component, not a missing CSS class: extract it to a Blade partial or component.
+2. **Utility-first** — style in the markup, not with custom CSS. Every class in the markup is a Tailwind class: an existing utility first, an arbitrary value when the scale has nothing — never a self-invented class name, whatever its purpose (a card, a heading style, a container width): it is defined nowhere and renders as nothing. A repeated class set is a missing Blade component, not a missing CSS class; a hook for JS/GSAP is a `data-*` attribute, never a class.
 
 3. **No `@apply`, no custom CSS** — there is exactly one accepted exception, and it is not a judgement call: Gravity Forms renders its own markup, so its output is styled centrally in `app.css` using semantic `@theme` tokens (see the Forms section in `AGENTS.md`). Everything else stays in utility classes.
 
@@ -165,7 +165,7 @@ Then define colors as semantic theme tokens and swap them under `.dark`, so you 
 Work down this ladder — most design values stop at step 1 or 2:
 
 1. **Exact match** — the value maps to a standard class: 80px → `m-20`. Use it.
-2. **A few pixels off** — snap to the nearest standard class: 82px → `m-20`, 13px → `text-sm`. Design files are rarely that precise on purpose, and snapping keeps the spacing rhythm consistent.
+2. **A few pixels off** — snap to the nearest standard class: 77px → `mt-20`, 35px → `gap-9`, 50px → `size-12`, 18px → `text-lg`, 20px → `text-xl`. Design files are rarely that precise on purpose, and snapping keeps the spacing rhythm consistent.
 3. **Genuinely off the scale** — only when the value deviates too much to snap, use an arbitrary value in rem (see [Units: rem](#units-rem)): 88px sits between `m-20` (80px) and `m-24` (96px), so `m-[5.5rem]`. If the same arbitrary value recurs, promote it to a `@theme` token instead of repeating the class.
 
 `w-[347px]` is a code smell — snap it to the scale or turn it into a token.
@@ -201,6 +201,8 @@ For large blocks of (CMS/markdown) text, use the [`@tailwindcss/typography` plug
 | Hardcoded colors (`text-[#3b82f6]`) | Theme tokens (`text-brand`) |
 | An arbitrary value a few pixels from a standard class (`m-[5.125rem]`) | Snap to the nearest class (`m-20`) |
 | `h-6 w-6` on square elements | `size-6` |
+| Any self-invented class name, of any kind | Only Tailwind classes: existing utility first, else arbitrary value; repeated set → Blade component; JS/GSAP hook → `data-*` |
+| Pixel arbitraries (`mt-[77px]`, `text-[18px]`, `size-[50px]`) | Snap to the scale (`mt-20`, `text-lg`, `size-12`); truly off-scale → rem arbitrary |
 | Hex or `rgb()` in `@theme` (`--color-brand: #3b82f6`) | oklch (`--color-brand: oklch(0.65 0.2 250)`) |
 | `style=""` alongside Tailwind | Everything in classes; arbitrary values if needed |
 | Styling each element separately in long text blocks | `prose` (typography plugin) |

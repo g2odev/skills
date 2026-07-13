@@ -11,10 +11,23 @@ A collection of agent skills and instructions for building WordPress themes (Roo
 | [alpinejs](.github/skills/alpinejs/SKILL.md) | Alpine.js conventions and best practices |
 | [gsap](.github/skills/gsap/SKILL.md) | GSAP animation conventions and best practices |
 | [wordpress-theme](.github/skills/wordpress-theme/SKILL.md) | WordPress theme development with Sage, Blade and PHP 8.4 |
+| [acf-elements](.github/skills/acf-elements/SKILL.md) | Make Blade elements manageable through ACF flexible content via local JSON |
 
 ## Structure
 
-Each skill lives in its own folder containing a `SKILL.md` file with instructions and any supporting files. The layout mirrors a real project, so everything can be copied 1-on-1:
+Each skill lives in its own folder containing a `SKILL.md` file with instructions and any supporting files. Every `SKILL.md` follows the same outline, so they stay predictable to read and to extend:
+
+| Section | Contains |
+|---|---|
+| `## Contents` | Table of contents for in-file navigation |
+| `## Documentation` | Links to the official docs |
+| `## When to use` | The situations that should trigger this skill |
+| `## Core principles` | The few ideas everything else follows from |
+| `## Conventions` | The actual rules, grouped in `###` subsections |
+| `## Anti-patterns` | Avoid/Do-instead table |
+| _(optional)_ | A closing section such as `## Tooling` or `## Related skills` |
+
+The layout mirrors a real project, so everything can be copied 1-on-1:
 
 ```
 skills/

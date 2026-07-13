@@ -150,3 +150,4 @@ Forms are converted to Gravity Forms, which renders its own markup — you canno
 - Modern formats (WebP/AVIF) where possible
 - Set `width` and `height` to prevent layout shift
 - In WordPress, output images via `wp_get_attachment_image()` — it generates `srcset`, `sizes`, lazy loading and dimensions automatically
+- All SVG icons and logos live in one Blade component (`<x-svg-icon name="icon-x" class="size-6 text-brand" />`): a `@switch` on `name`, `{{ $attributes }}` on the `<svg>` root and `fill="currentColor"` so `text-*` classes set the color — never inline `<svg>` in partials

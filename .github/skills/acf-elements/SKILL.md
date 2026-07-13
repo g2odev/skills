@@ -245,7 +245,7 @@ Fields whose choices are filled programmatically (not typed in the ACF UI) get t
 
 The `g2o_populate_` prefix signals “choices come from PHP”, so an empty `choices` array in the JSON is expected and correct — never hand-fill them.
 
-**Icons** are a populated field too: use `g2o_populate_icons` (a `select` with `"choices": []`) and render it with the `<x-svg-icon>` component, never inline SVG:
+**Icons** are a populated field too: use `g2o_populate_icons` (a `select` with `"choices": []`) and render it with the `<x-svg-icon>` component, never inline SVG — all theme SVGs live in that one component, see [SVG icons & logos](../wordpress-theme/SKILL.md#svg-icons--logos):
 
 ```blade
 @if (!empty($item['g2o_populate_icons']))

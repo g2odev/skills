@@ -16,6 +16,7 @@ description: 'WordPress theme development conventions and best practices with Ro
   - [View Composers](#view-composers)
   - [Queries](#queries)
   - [Images](#images)
+  - [SVG icons & logos](#svg-icons--logos)
   - [Security](#security)
   - [Translations](#translations)
   - [Custom post types & fields](#custom-post-types--fields)
@@ -115,6 +116,40 @@ class Hero extends Composer
 
 - Output via `wp_get_attachment_image()` — generates `srcset`, `sizes`, lazy loading and dimensions automatically
 
+### SVG icons & logos
+
+Every SVG used in the theme — icons and logos — lives in one Blade component: `resources/views/components/svg-icon.blade.php`. Never paste inline `<svg>` markup into partials and never scatter loose `.svg` files; add a `@case` to the component instead:
+
+```blade
+@props(['name'])
+
+@switch($name)
+  @case('icon-bloem')
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 96 96" {{ $attributes }}>
+      <path fill="currentColor" d="M87.712 48.29a17.5 17.5 0 0 0 2.954-2.157 17.2 17.2 0 0 0 4.932-15.891…" />
+    </svg>
+  @break
+
+  @case('icon-chat')
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 96 96" {{ $attributes }}>
+      <path fill="currentColor" d="M84.267 0C90.775 0 96 4.91 96 10.988v55.146c0 6.08-5.225 10.987-11.733 10.987…" />
+    </svg>
+  @break
+@endswitch
+```
+
+Usage — size, color and ARIA come from the caller:
+
+```blade
+<x-svg-icon name="icon-chat" class="size-6 text-brand" aria-hidden="true" />
+```
+
+- **`{{ $attributes }}` on the `<svg>` root** — callers pass Tailwind classes and `aria-*` attributes; the component itself carries none
+- **`fill="currentColor"` on the paths** (`fill="none"` on the root) — the icon follows the text color, so `text-*` utilities style it
+- **No hardcoded `width`/`height`** — keep the `viewBox` and size with `size-*` (square) or `h-*`/`w-*` (non-square) classes
+- **Prefix names by kind**: `icon-*` for icons, `logo-*` for logos
+- Decorative icons get `aria-hidden="true"` at the call site
+
 ### Security
 
 - Escape late: `esc_html()`, `esc_attr()`, `esc_url()` at output (or Blade's `{{ }}`)
@@ -144,6 +179,7 @@ class Hero extends Composer
 | Hardcoded strings | `__('...', 'theme-name')` |
 | More than one text domain in a theme | One domain — the theme folder name — in every translation call |
 | Manual `<img>` tags for attachments | `wp_get_attachment_image()` |
+| Inline `<svg>` pasted into partials, or loose `.svg` files | A `@case` in the `<x-svg-icon>` component |
 
 ## Related skills
 

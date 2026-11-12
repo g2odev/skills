@@ -23,11 +23,11 @@ Always build with the following stack:
 
 Detailed conventions and best practices per tool:
 
-- [tailwindcss](.github/skills/tailwindcss/SKILL.md) — Tailwind CSS v4 conventions and best practices
-- [alpinejs](.github/skills/alpinejs/SKILL.md) — Alpine.js conventions and best practices
-- [gsap](.github/skills/gsap/SKILL.md) — GSAP animation conventions and best practices
-- [wordpress-theme](.github/skills/wordpress-theme/SKILL.md) — WordPress theme development with Sage, Blade and PHP 8.4
-- [acf-elements](.github/skills/acf-elements/SKILL.md) — ACF flexible-content elements made manageable via local JSON, generated from Blade partials
+- [tailwindcss](.claude/skills/tailwindcss/SKILL.md) — Tailwind CSS v4 conventions and best practices
+- [alpinejs](.claude/skills/alpinejs/SKILL.md) — Alpine.js conventions and best practices
+- [gsap](.claude/skills/gsap/SKILL.md) — GSAP animation conventions and best practices
+- [wordpress-theme](.claude/skills/wordpress-theme/SKILL.md) — WordPress theme development with Sage, Blade and PHP 8.4
+- [acf-elements](.claude/skills/acf-elements/SKILL.md) — ACF flexible-content elements made manageable via local JSON, generated from Blade partials
 
 ## Rules
 
@@ -96,7 +96,7 @@ Sage conventions:
 </section>
 ```
 
-In a WordPress theme this anchor div is the `<x-element-id>` component — see the [acf-elements](.github/skills/acf-elements/SKILL.md) skill.
+In a WordPress theme this anchor div is the `<x-element-id>` component — see the [acf-elements](.claude/skills/acf-elements/SKILL.md) skill.
 
 - Position `absolute` elements with `inset-0` (or `inset-x-0`/`inset-y-0`) and offset further with margins (`-mt-24`, `ml-8`); do not use offset values on `top`/`left`/`bottom`/`right` themselves:
 

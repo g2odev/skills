@@ -6,7 +6,7 @@ A collection of agent skills and instructions for building WordPress themes (Roo
 
 | Item | Description |
 |---|---|
-| [AGENTS.md](AGENTS.md) | Always-on agent instructions: tech stack (Tailwind, Alpine, GSAP, Sage/WordPress), rules, layout, responsive, styleguide, Gravity Forms, accessibility and image conventions. Link into the root of a project (see [Usage](#usage)). |
+| [AGENTS.md](AGENTS.md) | Always-on agent instructions: tech stack (Tailwind, Alpine, GSAP, Sage/WordPress), rules, layout, responsive, styleguide, Gravity Forms, accessibility and image conventions. Loaded in a project through `CLAUDE.md` (see [Usage](#usage)). |
 | [tailwindcss](skills/tailwindcss/SKILL.md) | Tailwind CSS v4 conventions and best practices |
 | [alpinejs](skills/alpinejs/SKILL.md) | Alpine.js conventions and best practices |
 | [gsap](skills/gsap/SKILL.md) | GSAP animation conventions and best practices |
@@ -27,31 +27,33 @@ Each skill lives in its own folder containing a `SKILL.md` file with instruction
 | `## Anti-patterns` | Avoid/Do-instead table |
 | _(optional)_ | Extra material between Conventions and Anti-patterns (e.g. `## Templates` in acf-elements) and/or a closing section: `## Tooling`, `## Working with …` or `## Related skills` |
 
-The skill folders live in the root of the repo, so the repo itself can be mounted as a project's `.claude/skills` directory:
+The repo is laid out like a project's `.claude` directory, so it can be mounted there as a whole:
 
 ```
-skills/
+.claude/                 ← this repo
+├── CLAUDE.md            imports AGENTS.md (`@AGENTS.md`)
 ├── AGENTS.md
-├── tailwindcss/SKILL.md
-├── alpinejs/SKILL.md
-├── gsap/SKILL.md
-├── wordpress-theme/SKILL.md
-└── acf-elements/SKILL.md
+└── skills/
+    ├── tailwindcss/SKILL.md
+    ├── alpinejs/SKILL.md
+    ├── gsap/SKILL.md
+    ├── wordpress-theme/SKILL.md
+    └── acf-elements/SKILL.md
 ```
 
 ## Usage
 
-Add this repo to a project as a git submodule on `.claude/skills` — the skills are then picked up directly and loaded on demand, without copying or symlinking them:
+Add this repo to a project as a git submodule on `.claude` — no copying and no symlinks:
 
 ```sh
-git submodule add git@github.com:g2odev/skills.git .claude/skills
+git submodule add git@github.com:g2odev/skills.git .claude
 ```
 
-- **Skills**: available as `.claude/skills/<name>/SKILL.md` as soon as the submodule is added
-- **AGENTS.md**: arrives as `.claude/skills/AGENTS.md`; link it into the project root so it is loaded automatically on every request — `ln -s .claude/skills/AGENTS.md AGENTS.md` (and `ln -s AGENTS.md CLAUDE.md` for Claude Code)
-- **Note**: the skill links in AGENTS.md point to `.claude/skills/…`, i.e. the submodule path as seen from the project root — they resolve in a project, not inside this repo
+- **Skills**: available as `.claude/skills/<name>/SKILL.md` and loaded on demand
+- **Instructions**: Claude Code loads `.claude/CLAUDE.md` automatically on every request; it imports `AGENTS.md`, which holds the actual rules. The skill links in AGENTS.md are relative (`skills/…`), so they resolve both in a project and inside this repo
+- **Project settings**: `.claude/settings.local.json` is ignored by this repo, so a project's local Claude settings never end up here. The project must not track a `.claude` directory of its own — the submodule takes that path
 - **Cloning a project**: `git clone --recurse-submodules …`, or `git submodule update --init` in an existing clone
-- **Updating**: `git submodule update --remote .claude/skills`, then commit the new submodule pointer
+- **Updating**: `git submodule update --remote .claude`, then commit the new submodule pointer
 
 ## License
 

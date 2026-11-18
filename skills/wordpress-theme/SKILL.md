@@ -20,6 +20,8 @@ description: 'WordPress theme development conventions and best practices with Ro
   - [Security](#security)
   - [Translations](#translations)
   - [Custom post types & fields](#custom-post-types--fields)
+  - [wp-admin](#wp-admin)
+  - [External feeds & integrations](#external-feeds--integrations)
 - [Anti-patterns](#anti-patterns)
 - [Related skills](#related-skills)
 
@@ -168,6 +170,36 @@ Usage — size, color and ARIA come from the caller:
 
 - Register CPTs and taxonomies in `app/setup.php` (or a dedicated `app/PostTypes/` class per CPT)
 - Prefer ACF (or native meta) exposed through View Composers, so templates never call `get_field()` directly
+- **Content without a page of its own is a non-public post type**: team members, frequently asked questions, anything an element picks and shows. `'public' => false, 'show_ui' => true, 'rewrite' => false, 'has_archive' => false` — no URL, not in the site search, not in the sitemap, so nothing to keep out of Google by hand. Use the native title and editor where they fit (FAQ: title = question, content = answer; `'show_in_rest' => false` gives the plain editor for short texts)
+- The detail page of a public post type is managed entirely on the post: it renders the post's own elements, never defaults appended from an options page. The overview page per post type (breadcrumb, back link) is one setting under Opties > Algemeen — see [acf-elements](../acf-elements/SKILL.md)
+- An admin list of a post type that has a status or source worth seeing gets a column and a filter (`manage_{cpt}_posts_columns`, `restrict_manage_posts` + `pre_get_posts`); a short marker behind the title goes through `display_post_states`, never by changing the title
+
+### wp-admin
+
+- **Structure**: hook files (`app/hooks/*.php`, `app/setup.php`, `app/filters.php`) only register hooks. An admin page is a class that turns data into plain arrays plus a Blade view under `resources/views/admin/`; no markup in closures. Classes do one thing (fetching, mapping fields, media, mail, the log, the page) — a class that grows past a few hundred lines is doing several
+- **Markup**: wp-admin has no Tailwind. Use the admin's own classes (`wrap`, `wp-heading-inline`, `page-title-action`, `wp-list-table widefat striped`, `tablenav`, `subsubsub`, `postbox`, `notice notice-*`); a few inline styles are acceptable there and only there
+- **Notices are short**: what is wrong in a few words, plus a link — `Aanbod wordt niet bijgewerkt: IP-adres geweigerd (203.0.113.7). Bekijk logboek`. The explanation and what to do about it belong on the page the link opens, not in the notice. Show a blocking problem on every admin page, the rest only on the screens it concerns
+- **Actions**: state-changing links and forms go through `admin-post.php` with a capability check and a nonce. `wp_nonce_url()` returns an HTML-escaped URL — escaping it again in a template (`{{ }}`, `esc_url()` on top) turns `&` into `&amp;amp;` and WordPress answers "De link die je volgde is verlopen". Build a plain URL (`add_query_arg(['action' => …, '_wpnonce' => wp_create_nonce(…)], admin_url('admin-post.php'))`) and escape once, at output
+- **Request values** are only used when they are plain strings that match a known option: `is_string($_GET['status'] ?? null) && isset($options[$_GET['status']])`. `isset($options[$_GET['status']])` alone is a fatal error when the value is an array
+- **Test the button on every page it is on.** A link that works above one list can be broken on another page that renders it through a different template
+
+### External feeds & integrations
+
+A link with an external system (a property feed, a CRM) follows the same rules every time:
+
+- **On when the key is there.** The API key lives in `.env` and is exposed as a constant in `config/application.php`; the integration is active as soon as the key is set — no on/off switch in the admin. The key never goes into the database, a log, a notice or a mail (redact it from error messages), and requests to the service do not follow redirects
+- **External wins, internal stays.** Imported posts carry a meta id of the source (`_<prefix>_id`) and are overwritten by every sync; posts made in WordPress are never touched. Show the difference with a post state ("Intern" / "Extern") and a notice on the edit screen of an imported post
+- **A failure changes nothing.** The content already on the site stays online; a post that leaves the feed becomes a draft, nothing is deleted. An empty answer only takes everything offline when it repeats. The public site says that the content cannot be shown only when there is nothing to fall back on
+- **Typed errors**: an enum with one case per cause (not configured, IP refused, key refused, unavailable, unreadable answer, cron not running), each with a short title for lists and notices and a full sentence for the detail page
+- **A log page** under the post type: one row per sync (title = date and what happened, started by, status), a detail page per row with what was added, updated (and what changed), removed and skipped, filters, paging and delete. Cap the number of rows
+- **Mail once per outage** to the developers and the site admin — when the link breaks or the cause changes, not on every attempt — and write a row in the log that says the mail went out and to whom
+- **Watch the schedule**: WP-Cron only runs on visits. Detect an overdue event, report it like any other failure, and offer a WP-CLI command for a server cron
+- **One sync at a time**: lock with `add_option()` (an atomic insert), not a transient, and take over a lock that is older than the longest possible run
+- **Media is downloaded, not hotlinked**: only from the service's own host, over https, with a size limit and a check of the real file type; stored as WebP with a name of our own (`<slug>-01.webp`), attached to the post, removed when it leaves the feed, and hidden from the media library (`ajax_query_attachments_args`, `pre_get_posts` on the `upload` screen) so editors cannot reuse or delete it
+- **Text from the feed** passes `wp_kses()` with a short allow-list (paragraphs, emphasis, lists, links) — not `wp_kses_post()`
+- **XML** is parsed with `LIBXML_NONET` and refused when it holds a `DOCTYPE` or `ENTITY`
+- **Removed posts need a redirect**: the log asks for one and names the old URL; making it stays a manual job
+- **Test with the real response and with mocked ones** (`pre_http_request`): changed, removed, back again, refused, unreachable, malformed, hostile content. Field mappings built from documentation alone are wrong somewhere — compare one real object field by field as soon as there is one
 
 ## Anti-patterns
 
@@ -182,6 +214,13 @@ Usage — size, color and ARIA come from the caller:
 | More than one text domain in a theme | One domain — the theme folder name — in every translation call |
 | Manual `<img>` tags for attachments | `wp_get_attachment_image()` |
 | Inline `<svg>` pasted into partials, or loose `.svg` files | A `@case` in the `<x-svg-icon>` component |
+| A public post type for content that has no page (team, FAQ) | `'public' => false, 'show_ui' => true` |
+| Markup echoed from a hook closure, or one class that fetches, maps, mails and renders | A class per job; admin markup in a Blade view under `resources/views/admin/` |
+| A long admin notice that explains the cause and the cure | A few words and a link to the page with the details |
+| `{{ wp_nonce_url(…) }}` or `esc_url(wp_nonce_url(…))` | A plain URL with `wp_create_nonce()`, escaped once |
+| An API key in the database or an on/off option for an integration | The key in `.env`; a key present means on |
+| Hotlinking media from an external service | Download, convert, rename, attach, hide from the media library |
+| Deleting or migrating stored content without a copy | `wp db export` first; write, read back, then delete |
 
 ## Related skills
 

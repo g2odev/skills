@@ -17,6 +17,11 @@ description: 'Make Blade "elements" manageable through ACF using local JSON fiel
   - [Descriptions & placeholders](#descriptions--placeholders)
   - [Predefined descriptions per field type](#predefined-descriptions-per-field-type)
   - [Populated (dynamic) fields](#populated-dynamic-fields)
+  - [Icon fields](#icon-fields)
+  - [Elements managed under Opties](#elements-managed-under-opties)
+  - [Elements with a type](#elements-with-a-type)
+  - [Editor helpers](#editor-helpers)
+  - [Changing an element that already holds content](#changing-an-element-that-already-holds-content)
   - [Keys](#keys)
   - [JSON field & group defaults](#json-field--group-defaults)
   - [Naming, language & escaping](#naming-language--escaping)
@@ -63,8 +68,10 @@ The loop is generic — `partials/elements.blade.php` walks the rows and include
 ```blade
 @while (have_rows('elements'))
   @php(the_row())
-  @if (View::exists('partials.' . get_row_layout()))
-    @include('partials.' . get_row_layout())
+  {{-- Layout names are snake_case, view files kebab-case: `key_figures` renders partials/key-figures. --}}
+  @php($elementView = 'partials.' . str_replace('_', '-', get_row_layout()))
+  @if (View::exists($elementView))
+    @include($elementView)
   @endif
 @endwhile
 ```
@@ -72,6 +79,12 @@ The loop is generic — `partials/elements.blade.php` walks the rows and include
 Page templates include this partial once — `@include('partials.elements')` — wherever the flexible content should render.
 
 Because the three names match (`elementN`), adding an element is purely additive: no central registry to edit by hand.
+
+**Which name an element gets.** A general-purpose block — text with an image, a content block, anything without a fixed meaning — is numbered: label `Element #1`, name `element1`. An element with one specific purpose gets a descriptive English name and a Dutch label (`usp` / "USP's", `key_figures` / "Kerncijfers", `publications` / "Publicaties"). When in doubt whether a block is generic, ask — it is the client's call.
+
+**Multi-word names.** ACF names are snake_case, Blade files kebab-case and variables camelCase: layout and field `key_figures`, partial `partials/key-figures.blade.php`, variable `$keyFigures`. That is why the loop above converts the layout name.
+
+**Detail pages own their elements.** A custom post type's detail page renders only the elements of the post itself (`single-{cpt}.blade.php` → `@include('partials.elements')`). Never append "default elements" from an options page to every detail page. Per-post-type settings such as the overview page (for the breadcrumb and back link) live under Opties > Algemeen, not on an options sub-page per post type.
 
 > **Why `get_sub_field()` lives in the partial.** The [wordpress-theme](../wordpress-theme/SKILL.md) skill says to map fields in a View Composer instead of scattering `get_field()` through templates. Flexible content is the exception: sub-fields only exist inside the `have_rows()` / `the_row()` loop, so they cannot be resolved up-front in a composer. One `get_sub_field('elementN')` at the top of the partial is the intended pattern — everything below it reads the resulting array, not ACF.
 
@@ -98,17 +111,20 @@ Infer the ACF `type` from the Blade usage:
 
 | Blade usage | ACF `type` | Notes |
 |---|---|---|
-| `{!! $el['title'] !!}` short text | `text` | `required` when the markup has no `@if` guard |
+| `{!! $el['title'] !!}` short text | `text` | `required` when the markup has no `@if` guard. Also for short unformatted copy of a sentence or two (intro, card text, short quote): a `text` field, not a `textarea` |
+| a title whose lines are lines in the design | `textarea` | `"new_lines": "br"`; the only reason for a `textarea` besides longer plain text |
 | `{!! $el['label'] !!}` | `text` | optional intro/eyebrow |
 | `{!! wp_kses_post($el['content']) !!}` rich text | `wysiwyg` | `"toolbar": "full"`, `"media_upload": 0` |
 | `esc_url($el['button']['url'])`, `['title']`, `['target']` | `link` | `"return_format": "array"` |
 | `wp_get_attachment_image($el['image'], …)` | `image` | `"return_format": "id"` — always; render through `wp_get_attachment_image()` so `srcset`/dimensions come for free |
 | `$el['contact']['name']`, `$el['contact']['image']`, … | `group` | related fields forming one unit — see [Grouping related fields](#grouping-related-fields) |
 | `@foreach ($el['items'] as $item)` / `have_rows('items')` | `repeater` | model each `$item['x']` as a sub-field |
-| `$el['x'] == 'value'` toggle/choice | `true_false` / `select` | choices from the compared values |
+| `$el['x'] == 'value'` toggle/choice | `true_false` / `select` | choices from the compared values. Only add a choice the editor can see the effect of; a setting that changes a few classes is not a field |
+| `<x-svg-icon :name="$item['icon']" />` | `icon_picker` | see [Icon fields](#icon-fields) |
+| two or more buttons side by side | `repeater` `buttons` | one `link` sub-field `button`; the template styles by position (first = primary). Never `button_primary` / `button2` |
 | number used in markup | `number` | |
 
-When unsure, prefer `text` for single line and `wysiwyg` for multi-line/HTML content.
+When unsure, prefer `text` for anything short without formatting and `wysiwyg` for multi-line/HTML content.
 
 ### Grouping related fields
 
@@ -158,13 +174,17 @@ When several fields form one logical unit, bundle them in a `group` sub-field in
       "allow_in_bindings": 0,
       "return_format": "id",
       "library": "all",
-      "preview_size": "medium"
+      "preview_size": "thumbnail"
     }
   ]
 }
 ```
 
-Extend `sub_fields` the same way with the other unit fields (`role`, `phone`, `email`, …). In Blade the group is one nested array:
+Extend `sub_fields` the same way with the other unit fields (`role`, `phone`, `email`, …).
+
+**Order inside a group**: text fields first (label, title, text), then buttons and repeaters, then the anchor, and **image fields last**. Several images keep their own order at the bottom. This also holds for the `elementN` wrapper group itself.
+
+In Blade the group is one nested array:
 
 ```blade
 @if (!empty($element1['contact']))
@@ -184,7 +204,9 @@ Extend `sub_fields` the same way with the other unit fields (`role`, `phone`, `e
 
 Every field must guide the editor, exactly like the example group:
 
-- **`instructions`** — a short, friendly sentence on every field describing what to enter (e.g. `"Voeg een titel toe aan het element."`). Mark optional fields with `"… indien gewenst …"`.
+- **`instructions`** — a short, friendly sentence on every field describing what to enter (e.g. `"Voeg een titel toe aan het element."`). Keep it short and simple: one sentence, a second one only when the editor could not guess the effect otherwise; aim for under 100 characters. No explanation of how the template works.
+- **Optional fields say `indien gewenst`**, right after the verb: `Voeg indien gewenst een label toe.`, `Selecteer indien gewenst een afbeelding.`, `Voer indien gewenst een volledige URL in.` This follows the `required` flag: every field with `"required": 0` that holds content (text, textarea, wysiwyg, image, file, link, url, email, number, post_object, relationship, repeater, gallery, a select with `allow_null`). It does **not** go on a `group` (a container), a `true_false` or a select without `allow_null` (they always hold a value), a repeater with a `min`, or a required field. If "indien gewenst" reads oddly because the element is useless without the field, the field should be `required`.
+- **Wording**: say `Afbeelding` / `Afbeeldingen`, never `Foto` — also in compounds (`Afbeeldingengalerij`, `portretafbeelding`, `hoofdafbeelding`).
 - **`placeholder`** — on every field type that supports one (`text`, `textarea`, `email`, `url`, `number`, `password`), a concrete example starting with `Bijvoorbeeld: "…"`. **Take the example from the partial itself**: the text the HTML element contains is the field's placeholder — don't invent new copy or lorem ipsum. Field types without placeholder support (`wysiwyg`, `image`, `link`, `select`, `true_false`, `repeater`, `group`) get only `instructions`.
 
 | Field type | `instructions` | `placeholder` |
@@ -199,13 +221,14 @@ Every field starts from a **predefined default `instructions`** (and, where supp
 | ACF `type` | Default `instructions` | Default `placeholder` |
 |---|---|---|
 | `text` | `Voeg een {onderwerp} toe aan het element.` | `Bijvoorbeeld: "…"` |
-| `textarea` | `Voeg een korte {onderwerp} toe aan het element.` | `Bijvoorbeeld: "…"` |
+| `textarea` | `Voeg een {onderwerp} toe, met elke regel op een nieuwe regel.` | `Bijvoorbeeld: "…"` |
 | `wysiwyg` | `Voeg de inhoud toe aan het element.` | — |
 | `number` | `Voer een aantal in voor {onderwerp}.` | `Bijvoorbeeld: "3"` |
 | `email` | `Voer een e-mailadres in.` | `Bijvoorbeeld: "naam@voorbeeld.nl"` |
 | `url` | `Voer een volledige URL in.` | `Bijvoorbeeld: "https://voorbeeld.nl"` |
 | `link` | `Voeg indien gewenst een button of link toe aan het element.` | — |
 | `image` | `Selecteer een afbeelding voor het element.` | — |
+| `icon_picker` | `Selecteer een icoon voor {onderwerp}.` | — |
 | `file` | `Upload een bestand voor het element.` | — |
 | `gallery` | `Voeg één of meer afbeeldingen toe aan de galerij.` | — |
 | `select` | `Kies een optie voor {onderwerp}.` | — |
@@ -215,9 +238,10 @@ Every field starts from a **predefined default `instructions`** (and, where supp
 | `repeater` | `Voeg één of meer {onderwerp} toe aan het element.` | — |
 | `group` | `Voeg informatie toe aan het element.` | — |
 | `relationship` / `post_object` | `Selecteer de gerelateerde items voor het element.` | — |
+| `message` (element filled from Opties) | — the `message` is `De inhoud beheer je onder <strong>Opties &gt; Elementen &gt; {naam}</strong>.` | — |
 | `date_picker` | `Kies een datum.` | — |
 
-Mark optional fields by inserting `indien gewenst` (e.g. `Voeg indien gewenst een label toe aan het element.`).
+Mark optional fields by inserting `indien gewenst` (e.g. `Voeg indien gewenst een label toe aan het element.`) — see the rule above for which fields count as optional.
 
 For a `group` that bundles a logical unit, describe the unit itself instead of the generic default: `Voeg de gegevens van de contactpersoon toe.` — the generic `Voeg informatie toe aan het element.` is only for the outer `elementN` wrapper group.
 
@@ -248,13 +272,108 @@ Fields whose choices are filled programmatically (not typed in the ACF UI) get t
 
 The `g2o_populate_` prefix signals “choices come from PHP”, so an empty `choices` array in the JSON is expected and correct — never hand-fill them.
 
-**Icons** are a populated field too: use `g2o_populate_icons` (a `select` with `"choices": []`) and render it with the `<x-svg-icon>` component, never inline SVG — all theme SVGs live in that one component, see [SVG icons & logos](../wordpress-theme/SKILL.md#svg-icons--logos):
+### Icon fields
+
+A field where the editor chooses an icon is ACF's [Icon Picker](https://www.advancedcustomfields.com/resources/icon-picker/) (`"type": "icon_picker"`, name `icon`) with a custom tab that shows the theme's own icons — never a `select` with icon names. The editor sees the icons and clicks one; the template gets the icon name for `<x-svg-icon>`.
+
+```json
+{
+  "key": "field_<uid>",
+  "label": "Icoon",
+  "name": "icon",
+  "aria-label": "",
+  "type": "icon_picker",
+  "instructions": "Selecteer indien gewenst een icoon voor de USP.",
+  "required": 0,
+  "conditional_logic": 0,
+  "wrapper": { "width": "", "class": "", "id": "" },
+  "allow_in_bindings": 0,
+  "library": "all",
+  "tabs": ["theme_icons"],
+  "return_format": "string",
+  "default_value": { "type": null, "value": null }
+}
+```
+
+Register the tab and its icons in `app/filters.php`. Offer a **curated list with Dutch labels** — icons that mean something next to a text, not the arrows, form controls and logos that also live in the component:
+
+```php
+add_filter('acf/fields/icon_picker/tabs', function (array $tabs): array {
+    $tabs['theme_icons'] = __('Iconen', 'theme-name');
+
+    return $tabs;
+});
+
+add_filter('acf/fields/icon_picker/theme_icons/icons', function (): array {
+    return array_map(function (string $name, string $label): array {
+        $svg = trim(Blade::render('<x-svg-icon :name="$name" />', ['name' => $name]));
+        // The picker draws the icon as a CSS background: an image that knows nothing of the site.
+        $svg = preg_replace('/var\(--color-[a-z0-9-]+\)|currentColor|#fff(?:fff)?\b/i', '#1d2327', $svg);
+
+        return ['key' => $name, 'label' => $label, 'url' => 'data:image/svg+xml;base64,' . base64_encode($svg)];
+    }, array_keys(picker_icons()), picker_icons());
+});
+```
+
+- **Data URI, base64** — the picker puts the URL unquoted in `background: url( … )`; a raw SVG string breaks there.
+- **Write the colors out** — `currentColor` and `var(--color-*)` do not resolve inside an image, and light colors vanish on the white admin. Keep an accent color if you like; make everything else dark.
+- **`"tabs"` holds only the theme tab**, so Dashicons, media library and URL are not offered.
+- **An empty picker returns the default array, not a string** — check `is_string($item['icon'])` (in the composer or partial) before handing it to `<x-svg-icon>`.
 
 ```blade
-@if (!empty($item['g2o_populate_icons']))
-  <x-svg-icon :name="$item['g2o_populate_icons']" />
+@if (is_string($item['icon'] ?? null) && $item['icon'] !== '')
+  <x-svg-icon :name="$item['icon']" class="size-8" aria-hidden="true" />
 @endif
 ```
+
+### Elements managed under Opties
+
+When an element comes back on several pages with the **same content** (USP's, values, quotes, a CTA, a marquee), its content is managed once under **Opties > Elementen**, not filled in per page. When you notice identical content in one element on several pages, say so and offer the move — which elements move is the client's call.
+
+- **Options field group** ("Opties - Elementen"): one tab per element, holding a `group` named after the element (`usp`, `values`) with all its fields. For a set the editor picks from (several CTA's), a repeater with a required internal `name` instead.
+- **The element on the page** keeps its layout and wrapper group but has no content fields — only a `message` field that says where the content lives, and nothing else:
+
+```json
+{
+  "key": "field_<uid>",
+  "label": "USP's",
+  "name": "info",
+  "aria-label": "",
+  "type": "message",
+  "instructions": "",
+  "required": 0,
+  "conditional_logic": 0,
+  "wrapper": { "width": "", "class": "", "id": "" },
+  "allow_in_bindings": 0,
+  "message": "De inhoud beheer je onder <strong>Opties &gt; Elementen &gt; USP's</strong>.",
+  "new_lines": "wpautop",
+  "esc_html": 0
+}
+```
+
+- **A View Composer** for the partial reads the option and hands it over (`['usp' => option('usp', 'elements')]`); the partial no longer calls `get_sub_field()` and renders when the option holds content.
+- This does not contradict "detail pages own their elements": the element is still placed on each page, only its content is shared.
+
+### Elements with a type
+
+One element can cover a family of blocks that list items of a post type: a `publications` element with a `type` select ("Aanbod: slider", "Team", "FAQ", …) and one `group` per type, shown through conditional logic on the select and rendered by `partials/publications/<type>.blade.php`. A new kind of list becomes a new type, not a new element.
+
+Content that is picked in such a type but has no page of its own — team members, frequently asked questions — is a **non-public post type** (`'public' => false, 'show_ui' => true`), chosen with a `relationship` field (`"return_format": "id"`). It then has no URL, stays out of the site search and the sitemap, and can be reused on several pages. See [Custom post types](../wordpress-theme/SKILL.md#custom-post-types--fields).
+
+### Editor helpers
+
+- **Layouts in alphabetical order.** Keep the `layouts` map of the "Elementen" group sorted by label, so the "Element toevoegen" menu reads A–Z. Insert a new layout at its place; after renaming one, move it.
+- **The element's name on the front end.** `<x-element-id>` shows a small badge with the layout label ("Element #1", "Publicaties › Team") for logged-in users and on a development environment (`is_user_logged_in() || wp_get_environment_type() === 'development'`). A click copies the element's `#anchor`. The badge is absolutely positioned inside the element's `relative` section and hidden below `xl`.
+
+### Changing an element that already holds content
+
+Renaming an element, moving its content to Opties or turning it into a type touches stored data. ACF stores a flexible-content row as `elements_<n>_<field>…` meta plus a `_…` reference to the field key, and the layout names as a serialized array in the `elements` meta.
+
+1. **Export the database first** (`wp db export`) and save a copy of the affected pages' HTML to compare afterwards.
+2. **Write through the field key, not the name**, when two fields share a name (the page element and the options group are both called `usp`): `update_field('field_<uid>', $value, $optionsId)`. By name ACF may resolve the wrong field and save nothing — while reporting success.
+3. **Read the new value back and check it before deleting the old meta.** Never delete in the same step as the write.
+4. **Rename** = rename the `elements_<n>_<old>…` and `_elements_<n>_<old>…` meta keys and replace the name in the serialized `elements` array, for every post (drafts too). Field keys stay the same.
+5. **Compare** the rendered section before and after; it should be identical apart from nonces.
 
 ### Keys
 
@@ -277,13 +396,13 @@ When hand-editing JSON, match what the ACF UI writes so Local JSON stays diff-cl
 
 ### Naming, language & escaping
 
-- **Names must match everywhere**: layout `name` = partial filename (`element1` → `partials/element1.blade.php`) = the inner group field `name` read via `get_sub_field('element1')`.
+- **Names must match everywhere**: layout `name` = partial filename (`element1` → `partials/element1.blade.php`) = the inner group field `name` read via `get_sub_field('element1')`. A multi-word name is snake_case in ACF and kebab-case as a file: `key_figures` → `partials/key-figures.blade.php`, read into `$keyFigures`.
 - **Partial skeleton**: define `$elementN = get_sub_field('elementN')` at the top (English name matching the element), wrap everything in `@if (!empty($elementN))`, add `data-element="elementN"` on the `<section>`, include `<x-element-id>` with `Begin`/`End` comments and bracket the markup with `Element #N: Begin` / `Element #N: End` comments — see the [Blade partial](#blade-partial--partialselement1bladephp) template.
 - **Section wrapper**: every element partial wraps in a `<section>`; vertical margin/padding and any full-width `bg-*` sit on the section, the container inside only centers and pads horizontally. A background that must stay contained goes on a div inside the container.
 - Keep `"prefix_name": 0` and `"display": "seamless"` on the clone, otherwise the sub-fields land under a prefixed key and `get_sub_field('element1')` returns nothing.
 - Set `"active": false` on every standalone element group so it never shows as its own metabox — it is only consumed through the clone.
 - **Language**: field `label`, `instructions` and `placeholder` are in Dutch; field `name`s are always English snake_case.
-- **Populated fields**: prefix any field whose choices are filled from PHP with `g2o_populate_` (e.g. `g2o_populate_forms`) and leave `"choices": []` in the JSON — see [Populated (dynamic) fields](#populated-dynamic-fields).
+- **Populated fields**: prefix any field whose choices are filled from PHP with `g2o_populate_` (e.g. `g2o_populate_forms`) and leave `"choices": []` in the JSON — see [Populated (dynamic) fields](#populated-dynamic-fields). An icon is not a populated select but an [icon picker](#icon-fields).
 - Give **every** field a description (`instructions`) and, where the type supports it, a `placeholder` (`Bijvoorbeeld: "…"`) taken from the text the HTML element holds in the partial — see [Descriptions & placeholders](#descriptions--placeholders).
 - Guard every output in Blade with `!empty()`; echo field output with `{!! !!}` (trusted editor content — `{{ }}` would double-escape entities), use `esc_url()`/`esc_attr()` inside attributes and `wp_kses_post()` on the WYSIWYG field. Titles may fall back to `get_the_title()` — see [Banner title](#banner-title--fallback-to-the-post-title).
 - **Text domain**: a theme has exactly one text domain — the theme's folder name; the templates here write `theme-name` as a placeholder for it. `data-*` values are identifiers and are never translated.
@@ -571,6 +690,19 @@ Drop example text into the exact HTML spots the partial outputs each field. This
 | Unescaped URLs or attributes (`href="{!! $url !!}"`) | `esc_url()` / `esc_attr()` inside attribute output |
 | `__()` around a `data-element` value or other identifier | Plain slug: `data-element="element1"` |
 | Hardcoding another project's text domain (`academies`, …) | Use the project's own text domain everywhere |
+| A descriptive name for a general-purpose block ("Contentblok") | `Element #N` / `elementN`; descriptive names are for elements with one purpose |
+| `button_primary` + `button_secondary`, or `button1` / `button2` | One `buttons` repeater with a `button` link sub-field |
+| A `textarea` for a sentence of plain text | `text`; a `textarea` only where line breaks matter |
+| `"preview_size": "medium"` on an image or gallery | `"thumbnail"` |
+| An image field first or in the middle of a group | Image fields last in the group |
+| "Foto" in a label or instruction | "Afbeelding" |
+| An optional field without `indien gewenst`, or a long instruction that explains the template | `indien gewenst` after the verb; one short sentence |
+| A `select` listing icon names | `icon_picker` with a tab of theme icons |
+| The same content typed into one element on several pages | Manage it under Opties > Elementen; the page element only holds a note |
+| A note on such an element that describes what it shows | Only where it is managed: `De inhoud beheer je onder Opties > Elementen > …` |
+| A setting that only swaps a few classes | No field; one layout |
+| Default elements from an options page appended to every detail page | The post's own `elements` only |
+| `update_field('<name>', …)` when two fields share the name, then deleting the old meta right away | Write by field key, read back, then delete — after a database export |
 
 ## Related skills
 

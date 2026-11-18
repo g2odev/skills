@@ -13,7 +13,9 @@ description: 'Make Blade "elements" manageable through ACF using local JSON fiel
 - [Conventions](#conventions)
   - [Workflow — generate ACF JSON from a Blade element](#workflow--generate-acf-json-from-a-blade-element)
   - [Field-type mapping](#field-type-mapping)
+  - [Buttons side by side](#buttons-side-by-side)
   - [Grouping related fields](#grouping-related-fields)
+  - [One element with a type](#one-element-with-a-type)
   - [Descriptions & placeholders](#descriptions--placeholders)
   - [Predefined descriptions per field type](#predefined-descriptions-per-field-type)
   - [Populated (dynamic) fields](#populated-dynamic-fields)
@@ -46,7 +48,15 @@ description: 'Make Blade "elements" manageable through ACF using local JSON fiel
 
 ## Core principles
 
-Every element is built from **three files that share one name** (`elementN`):
+Every element is built from **three parts that share one name** (`elementN`), each written in the case its side expects:
+
+| Part | Case | Single word | Multiple words |
+|---|---|---|---|
+| ACF layout `name` and field `name` | snake_case | `element1` | `key_figures` |
+| View file | kebab-case | `partials/element1.blade.php` | `partials/key-figures.blade.php` |
+| Blade variable | camelCase | `$element1` | `$keyFigures` |
+
+For a single-word name the three are identical; for a name of several words they are the same name in a different case — never literally the same string.
 
 ```
 acf-json/group_<uid>.json          →  layout "elementN"              →  partials/elementN.blade.php
@@ -55,23 +65,30 @@ standalone group, field: elementN     in flexible content "elements"    get_sub_
 ```
 
 1. **Standalone ACF group** (`acf-json/group_*.json`) — one `group` field named `elementN` holding the actual sub-fields (label, title, content, …). Set `"active": false`: it only exists to be cloned, it must not render its own metabox.
-2. **Central "Elementen" flexible content** (`field: elements`) — one `layout` per element whose `name` equals the partial name. Each layout contains a single **clone** field that clones the standalone group with `"display": "seamless"` and `"prefix_name": 0`, so the group stays reachable as `get_sub_field('elementN')`.
+2. **Central "Elementen" flexible content** (`field: elements`) — one `layout` per element whose `name` is the partial name in snake_case (`key_figures` → `partials/key-figures.blade.php`). Each layout contains a single **clone** field that clones the standalone group with `"display": "seamless"` and `"prefix_name": 0`, so the group stays reachable as `get_sub_field('elementN')`.
 3. **Blade partial** (`partials/elementN.blade.php`) — read once into `$elementN = get_sub_field('elementN')`, then render each sub-field guarded by `!empty()`.
 
-The loop is generic — `partials/elements.blade.php` walks the rows and includes the partial whose name matches the layout:
+The loop is generic — `partials/elements.blade.php` walks the rows, turns the snake_case layout name into the kebab-case view name and includes that partial:
 
 ```blade
+{{-- partials/elements.blade.php --}}
 @while (have_rows('elements'))
   @php(the_row())
-  @if (View::exists('partials.' . get_row_layout()))
-    @include('partials.' . get_row_layout())
+  @php($elementView = 'partials.' . str_replace('_', '-', get_row_layout()))
+  @if (View::exists($elementView))
+    @include($elementView)
   @endif
 @endwhile
 ```
 
+```blade
+{{-- partials/key-figures.blade.php --}}
+@php($keyFigures = get_sub_field('key_figures'))
+```
+
 Page templates include this partial once — `@include('partials.elements')` — wherever the flexible content should render.
 
-Because the three names match (`elementN`), adding an element is purely additive: no central registry to edit by hand.
+Because the three names map onto each other, adding an element is purely additive: no central registry to edit by hand.
 
 > **Why `get_sub_field()` lives in the partial.** The [wordpress-theme](../wordpress-theme/SKILL.md) skill says to map fields in a View Composer instead of scattering `get_field()` through templates. Flexible content is the exception: sub-fields only exist inside the `have_rows()` / `the_row()` loop, so they cannot be resolved up-front in a composer. One `get_sub_field('elementN')` at the top of the partial is the intended pattern — everything below it reads the resulting array, not ACF.
 
@@ -101,14 +118,30 @@ Infer the ACF `type` from the Blade usage:
 | `{!! $el['title'] !!}` short text | `text` | `required` when the markup has no `@if` guard |
 | `{!! $el['label'] !!}` | `text` | optional intro/eyebrow |
 | `{!! wp_kses_post($el['content']) !!}` rich text | `wysiwyg` | `"toolbar": "full"`, `"media_upload": 0` |
-| `esc_url($el['button']['url'])`, `['title']`, `['target']` | `link` | `"return_format": "array"` |
-| `wp_get_attachment_image($el['image'], …)` | `image` | `"return_format": "id"` — always; render through `wp_get_attachment_image()` so `srcset`/dimensions come for free |
+| `esc_url($el['button']['url'])`, `['title']`, `['target']` | `link` | `"return_format": "array"` — one single button |
+| `@foreach ($el['buttons'] as $row)` with `$row['button']` | `repeater` `buttons` with one `link` sub-field `button` | two or more buttons side by side — see [Buttons side by side](#buttons-side-by-side) |
+| `wp_get_attachment_image($el['image'], …)` | `image` | `"return_format": "id"` and `"preview_size": "thumbnail"` — always; render through `wp_get_attachment_image()` so `srcset`/dimensions come for free |
 | `$el['contact']['name']`, `$el['contact']['image']`, … | `group` | related fields forming one unit — see [Grouping related fields](#grouping-related-fields) |
 | `@foreach ($el['items'] as $item)` / `have_rows('items')` | `repeater` | model each `$item['x']` as a sub-field |
 | `$el['x'] == 'value'` toggle/choice | `true_false` / `select` | choices from the compared values |
 | number used in markup | `number` | |
 
 When unsure, prefer `text` for single line and `wysiwyg` for multi-line/HTML content.
+
+### Buttons side by side
+
+Two or more buttons next to each other are **one repeater `buttons` with a single `link` sub-field `button`** — never `button_primary`/`button_secondary` or `button1`/`button2`. The template decides the style by position; which position is the main button is stated in the field's `instructions` (e.g. `Voeg één of meer buttons toe. De eerste button is de hoofdbutton.`). One single button stays a plain `link` field.
+
+```blade
+@foreach ($element1['buttons'] as $row)
+  @if (!empty($row['button']['url']))
+    <x-button :url="$row['button']['url']" :target="$row['button']['target'] ?: '_self'"
+      class="{{ $loop->first ? 'bg-red' : 'border border-beige bg-forest' }} …">
+      {!! $row['button']['title'] !!}
+    </x-button>
+  @endif
+@endforeach
+```
 
 ### Grouping related fields
 
@@ -158,7 +191,7 @@ When several fields form one logical unit, bundle them in a `group` sub-field in
       "allow_in_bindings": 0,
       "return_format": "id",
       "library": "all",
-      "preview_size": "medium"
+      "preview_size": "thumbnail"
     }
   ]
 }
@@ -179,6 +212,29 @@ Extend `sub_fields` the same way with the other unit fields (`role`, `phone`, `e
   </div>
 @endif
 ```
+
+### One element with a type
+
+Variants of the same kind of block become **one element with a type**, not a separate element per variant. That keeps the "Elementen" list short for the editor. There are two forms:
+
+**Managed under Options (CTA).** The versions live in a repeater under *Opties > Elementen*, each row with a `name` and a `type`. The element itself only holds the populated select `g2o_populate_ctas` (see [Populated (dynamic) fields](#populated-dynamic-fields)). The partial `partials/cta.blade.php` looks up the chosen row and hands over to `partials/ctas/<type>.blade.php`.
+
+**Type on the page (Publicaties, Media).** The element has a select `type` and, per type, a `group` whose `name` equals the type value, shown through conditional logic on `type`. The partial hands over to `partials/publications/<type>.blade.php` or `partials/media/<type>.blade.php`:
+
+```blade
+{{-- partials/publications.blade.php --}}
+@php($publications = get_sub_field('publications'))
+@php($publicationType = $publications['type'] ?? '')
+@php($publicationView = 'partials.publications.' . str_replace('_', '-', $publicationType))
+
+@if (!empty($publicationType) && View::exists($publicationView))
+  @include($publicationView, ['publication' => $publications[$publicationType] ?? []])
+@endif
+```
+
+- Type values are snake_case like every other ACF name; the type partial's filename is the same value in kebab-case.
+- The type partial receives only its own group (`$publication`), not the whole element.
+- Show the chosen type behind the row title in the editor (`Publicaties › Aanbod: overzicht met filters`) through the `acf/fields/flexible_content/layout_title` filter in `app/`, so collapsed rows stay recognisable.
 
 ### Descriptions & placeholders
 
@@ -270,6 +326,7 @@ When hand-editing JSON, match what the ACF UI writes so Local JSON stays diff-cl
 - **Preserve ACF's default keys** on every field — `aria-label`, `wrapper` (`{ "width": "", "class": "", "id": "" }`), `conditional_logic: 0`, `allow_in_bindings: 0` — and the group-level `menu_order`, `description`, `modified`. Don't strip them.
 - **Group defaults**: `"label_placement": "top"`, `"instruction_placement": "label"`, `"position": "normal"`, `"style": "default"`, `"show_in_rest": 0`.
 - **`return_format` per type**: `image` and `gallery` → `"id"` (render via `wp_get_attachment_image()`), `link` → `"array"`, `select` / `radio` → `"value"`.
+- **`preview_size`**: `image` and `gallery` → `"thumbnail"` — always a small preview in the admin, whatever size the partial renders.
 - **Repeater**: `"layout": "table"`, a Dutch `"button_label"` (e.g. `"Onderdeel toevoegen"`), `"parent_repeater"` set to the repeater's `key` on every sub-field, and `min` / `max` only when the design needs them.
 - **Location**: give a clone-only element group the same `location` as the "Elementen" flexible content (`post_type == post`), even though it never renders its own metabox.
 - **One file per group**: the filename is `group_<key>.json` and must contain the matching `"key"`.
@@ -277,15 +334,16 @@ When hand-editing JSON, match what the ACF UI writes so Local JSON stays diff-cl
 
 ### Naming, language & escaping
 
-- **Names must match everywhere**: layout `name` = partial filename (`element1` → `partials/element1.blade.php`) = the inner group field `name` read via `get_sub_field('element1')`.
-- **Partial skeleton**: define `$elementN = get_sub_field('elementN')` at the top (English name matching the element), wrap everything in `@if (!empty($elementN))`, add `data-element="elementN"` on the `<section>`, include `<x-element-id>` with `Begin`/`End` comments and bracket the markup with `Element #N: Begin` / `Element #N: End` comments — see the [Blade partial](#blade-partial--partialselement1bladephp) template.
+- **One name, three cases**: ACF layout and field `name`s are snake_case, view files kebab-case, Blade variables camelCase. The layout `name` equals the inner group field `name` (`key_figures`, read via `get_sub_field('key_figures')`), the partial is `partials/key-figures.blade.php` and the variable `$keyFigures`. For a single-word name (`element1`) all three coincide.
+- **Partial skeleton**: define `$elementN = get_sub_field('elementN')` at the top (English camelCase variable matching the element), wrap everything in `@if (!empty($elementN))`, add `data-element="elementN"` on the `<section>`, include `<x-element-id>` with `Begin`/`End` comments and bracket the markup with `Element #N: Begin` / `Element #N: End` comments — see the [Blade partial](#blade-partial--partialselement1bladephp) template.
 - **Section wrapper**: every element partial wraps in a `<section>`; vertical margin/padding and any full-width `bg-*` sit on the section, the container inside only centers and pads horizontally. A background that must stay contained goes on a div inside the container.
 - Keep `"prefix_name": 0` and `"display": "seamless"` on the clone, otherwise the sub-fields land under a prefixed key and `get_sub_field('element1')` returns nothing.
 - Set `"active": false` on every standalone element group so it never shows as its own metabox — it is only consumed through the clone.
-- **Language**: field `label`, `instructions` and `placeholder` are in Dutch; field `name`s are always English snake_case.
+- **Language**: field `label`, `instructions` and `placeholder` are in Dutch; field and layout `name`s are always English snake_case.
 - **Populated fields**: prefix any field whose choices are filled from PHP with `g2o_populate_` (e.g. `g2o_populate_forms`) and leave `"choices": []` in the JSON — see [Populated (dynamic) fields](#populated-dynamic-fields).
 - Give **every** field a description (`instructions`) and, where the type supports it, a `placeholder` (`Bijvoorbeeld: "…"`) taken from the text the HTML element holds in the partial — see [Descriptions & placeholders](#descriptions--placeholders).
-- Guard every output in Blade with `!empty()`; echo field output with `{!! !!}` (trusted editor content — `{{ }}` would double-escape entities), use `esc_url()`/`esc_attr()` inside attributes and `wp_kses_post()` on the WYSIWYG field. Titles may fall back to `get_the_title()` — see [Banner title](#banner-title--fallback-to-the-post-title).
+- Guard every output in Blade with `!empty()`; echo field output with `{!! !!}` (trusted editor content — `{{ }}` would double-escape entities), use `esc_url()`/`esc_attr()` inside attributes — echoed with `{!! !!}`, because `{{ esc_url($url) }}` escapes twice and breaks a URL containing `&` — and `wp_kses_post()` on the WYSIWYG field. Titles may fall back to `get_the_title()` — see [Banner title](#banner-title--fallback-to-the-post-title).
+- **Only inline `@php(...)` in partials**: an inline `@php(...)` followed by a `@php … @endphp` block in the same file throws a ParseError — never mix the two forms.
 - **Text domain**: a theme has exactly one text domain — the theme's folder name; the templates here write `theme-name` as a placeholder for it. `data-*` values are identifiers and are never translated.
 
 ## Templates
@@ -479,7 +537,7 @@ Every element partial follows the same skeleton:
 4. Include the `<x-element-id>` anchor component, wrapped in `Begin`/`End` comments.
 5. Wrap the markup in `Element #N: Begin` / `Element #N: End` comments.
 6. Inside comes the container (`mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8`) — it only centers and pads horizontally; never put margins, vertical padding or full-width backgrounds on it.
-7. Guard every sub-field with its own `!empty()`. Field output is echoed with `{!! !!}` — element fields are trusted editor content and may contain entities or intentional markup that `{{ }}` would double-escape into visible `&amp;`/`&#8211;`. Use `esc_url()` / `esc_attr()` inside attributes, and run the WYSIWYG field through `wp_kses_post()`.
+7. Guard every sub-field with its own `!empty()`. Field output is echoed with `{!! !!}` — element fields are trusted editor content and may contain entities or intentional markup that `{{ }}` would double-escape into visible `&amp;`/`&#8211;`. Use `{!! esc_url() !!}` / `{!! esc_attr() !!}` inside attributes — never `{{ esc_url() }}`, which escapes twice — and run the WYSIWYG field through `wp_kses_post()`.
 
 Replace `theme-name` with the project's actual text domain: the theme's folder name.
 
@@ -508,8 +566,8 @@ Replace `theme-name` with the project's actual text domain: the theme's folder n
 
       @if (!empty($element1['button']['url']))
         <x-button :message="$element1['button']['title'] ?? ''"
-          url="{{ esc_url($element1['button']['url']) }}"
-          target="{{ esc_attr($element1['button']['target'] ?? '_self') }}" />
+          url="{!! esc_url($element1['button']['url']) !!}"
+          target="{!! esc_attr($element1['button']['target'] ?? '_self') !!}" />
       @endif
     </div>
     {{-- Element #1: End --}}
@@ -558,7 +616,10 @@ Drop example text into the exact HTML spots the partial outputs each field. This
 | Reusing or editing a `field`/`group`/`layout` key | Generate a fresh unique key; never mutate saved keys |
 | Standalone group with `"active": true` | `false` — it is clone-only |
 | Registering these fields in PHP (`acf_add_local_field_group`) | Local JSON in `acf-json/`, versioned with the theme |
-| Mismatched names between layout, partial and group field | Use the exact same `elementN` in all three |
+| Mismatched names between layout, partial and group field | One name in all three: snake_case in ACF (`key_figures`), kebab-case view (`key-figures.blade.php`), camelCase variable (`$keyFigures`) |
+| A snake_case view file or variable (`key_figures.blade.php`, `$key_figures`) | Kebab-case for the file, camelCase for the variable; snake_case only in ACF |
+| A separate element per variant of the same block | One element with a `type` — see [One element with a type](#one-element-with-a-type) |
+| `button_primary`/`button_secondary` or `button1`/`button2` | One repeater `buttons` with a `link` sub-field `button`; the template styles by position |
 | Fields without `instructions` or (where supported) `placeholder` | Describe every field; add `Bijvoorbeeld: "…"` placeholders |
 | Invented/lorem-ipsum placeholder text | The placeholder is the text the HTML element holds in the partial |
 | A flat list of loose fields for one logical unit | Bundle them in a `group` with its own `instructions` (e.g. `contact`) |
@@ -566,9 +627,12 @@ Drop example text into the exact HTML spots the partial outputs each field. This
 | A `<div>` as the element wrapper, or an extra `<div>` around the `<section>` | The `<section data-element="elementN">` is the partial's outermost element |
 | Dutch field `name`s, or English `instructions`/`placeholder` | Names always English snake_case; descriptions/placeholders in Dutch |
 | Hand-filling `choices` on a dynamic select | Prefix with `g2o_populate_`, keep `"choices": []`, fill via `acf/load_field` |
+| `"preview_size": "medium"` (or larger) on an image field | `"thumbnail"` — the admin preview is always small |
 | Stripping ACF's default keys when hand-editing JSON | Keep `aria-label`, `wrapper`, `conditional_logic`, `allow_in_bindings`, group `menu_order`/`modified` |
 | `get_field()`/`get_sub_field()` scattered without guards | Read once into `$elementN`, guard with `!empty()` |
 | Unescaped URLs or attributes (`href="{!! $url !!}"`) | `esc_url()` / `esc_attr()` inside attribute output |
+| Double escaping (`href="{{ esc_url($url) }}"`) | `{!! esc_url($url) !!}` / `{!! esc_attr($value) !!}` — escape once |
+| Inline `@php(...)` and a `@php … @endphp` block in one file | Only the inline form in partials |
 | `__()` around a `data-element` value or other identifier | Plain slug: `data-element="element1"` |
 | Hardcoding another project's text domain (`academies`, …) | Use the project's own text domain everywhere |
 

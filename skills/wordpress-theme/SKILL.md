@@ -20,6 +20,7 @@ description: 'WordPress theme development conventions and best practices with Ro
   - [Security](#security)
   - [Translations](#translations)
   - [Custom post types & fields](#custom-post-types--fields)
+  - [Admin defaults](#admin-defaults)
 - [Anti-patterns](#anti-patterns)
 - [Related skills](#related-skills)
 
@@ -51,6 +52,8 @@ description: 'WordPress theme development conventions and best practices with Ro
 - Register nav menus in `app/setup.php` (`register_nav_menus(['primary_navigation' => __('Primary Navigation', 'theme-name')])`) and render them in a partial (`partials/navigation.blade.php`) — never hardcode menu items
 - The `/styleguide` page (required per project, see `AGENTS.md`) is a Blade page template: `resources/views/template-styleguide.blade.php` with a `{{-- Template Name: Styleguide --}}` header
 - Escape all output: `{{ $var }}` escapes automatically in Blade and is the default for untrusted values; `{!! !!}` is for trusted content — sanitized HTML (`wp_kses_post()`), WP titles (`get_the_title()` returns texturized entities that `{{ }}` would double-escape) and ACF element fields (trusted editor content, see the [acf-elements](../acf-elements/SKILL.md) skill). URLs and attributes always go through `esc_url()` / `esc_attr()`
+- Never wrap an escaping function in `{{ }}`: `{{ esc_url($url) }}` escapes twice, which breaks a URL containing `&`. Echo it with `{!! esc_url($url) !!}` / `{!! esc_attr($value) !!}`
+- Never mix the two `@php` forms in one file: an inline `@php(...)` followed by a `@php … @endphp` block throws a ParseError. In partials, use only the inline form
 - Always check a variable is set and not empty before outputting it:
 
 ```blade
@@ -68,6 +71,7 @@ description: 'WordPress theme development conventions and best practices with Ro
 ### Naming & comments
 
 - Follow Laravel/PSR conventions for naming: `camelCase` for variables (`$heroTitle`) and methods, `StudlyCaps` for classes — consistent with Sage/Acorn; WordPress core functions keep their own `snake_case` names
+- View files are kebab-case (`partials/key-figures.blade.php`); ACF field and layout names are snake_case (`key_figures`) — see the [acf-elements](../acf-elements/SKILL.md) skill
 - Prefix all custom functions in `functions.php` (and other global functions) with `g2o_` (e.g. `g2o_get_hero_image()`) to avoid collisions with WordPress core and plugins
 - Always wrap function definitions in a `function_exists()` check, and place a section comment block above each function:
 
@@ -107,6 +111,8 @@ class Hero extends Composer
     }
 }
 ```
+
+- Pass data to the view through `with()`. A public method on the composer reaches the view as an object, so `!empty()` and array access on it do not work.
 
 ### Queries
 
@@ -154,7 +160,7 @@ Usage — size, color and ARIA come from the caller:
 
 ### Security
 
-- Escape late: `esc_html()`, `esc_attr()`, `esc_url()` at output (or Blade's `{{ }}`)
+- Escape late: `esc_html()`, `esc_attr()`, `esc_url()` at output (or Blade's `{{ }}`) — one or the other, never both: an `esc_*()` call is echoed with `{!! !!}`
 - Sanitize early: `sanitize_text_field()`, `wp_kses_post()` on input
 - Verify nonces and capabilities (`current_user_can()`) for any form or admin action
 
@@ -169,6 +175,14 @@ Usage — size, color and ARIA come from the caller:
 - Register CPTs and taxonomies in `app/setup.php` (or a dedicated `app/PostTypes/` class per CPT)
 - Prefer ACF (or native meta) exposed through View Composers, so templates never call `get_field()` directly
 
+### Admin defaults
+
+- **ACF fields above Yoast SEO**: give the Yoast metabox a low priority in `app/filters.php`, so the ACF field groups sit at the top of the edit screen:
+
+```php
+add_filter('wpseo_metabox_prio', fn (): string => 'low');
+```
+
 ## Anti-patterns
 
 | Avoid | Do instead |
@@ -176,6 +190,9 @@ Usage — size, color and ARIA come from the caller:
 | Queries or logic in Blade templates | View Composers |
 | `query_posts()` | `WP_Query` + `wp_reset_postdata()` |
 | Echoing untrusted output unescaped | `{{ }}` / `esc_html()` / `esc_attr()` |
+| Double escaping (`{{ esc_url($url) }}`) | `{!! esc_url($url) !!}` / `{!! esc_attr($value) !!}` |
+| Inline `@php(...)` mixed with a `@php … @endphp` block | Only the inline form in partials |
+| Composer data through public methods | Return it from `with()` |
 | `get_field()` scattered in templates | Map fields in a View Composer |
 | Modifying core/plugin files | Actions and filters |
 | Hardcoded strings | `__('...', 'theme-name')` |

@@ -15,7 +15,11 @@ A collection of agent skills and instructions for building WordPress themes (Roo
 
 ## Structure
 
-Each skill lives in its own folder containing a `SKILL.md` file with instructions and any supporting files. Every `SKILL.md` follows the same outline, so they stay predictable to read and to extend:
+Each skill lives in its own folder containing a `SKILL.md` file with instructions and any supporting files. The layout follows [GoogleChrome/modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance): a description that says when to load the skill, a compact `SKILL.md`, detail in `references/` and a checklist to verify the result.
+
+**Frontmatter description.** This is the only part an agent always sees, so it decides whether the skill gets loaded. It has three parts: one sentence on what the skill covers, `Trigger on:` with the concrete keywords, function names and file names that should load it, and `Do NOT trigger for:` naming the neighbouring skill that owns the adjacent topic. Keep it a single-quoted one-liner under 1024 characters, without apostrophes.
+
+**Outline.** Every `SKILL.md` follows the same outline, so they stay predictable to read and to extend:
 
 | Section | Contains |
 |---|---|
@@ -24,8 +28,12 @@ Each skill lives in its own folder containing a `SKILL.md` file with instruction
 | `## When to use` | The situations that should trigger this skill |
 | `## Core principles` | The few ideas everything else follows from |
 | `## Conventions` | The actual rules, grouped in `###` subsections |
+| `## Reference files` | _(only when the skill has `references/`)_ Table mapping each topic to its reference file |
 | `## Anti-patterns` | Avoid/Do-instead table |
-| _(optional)_ | Extra material between Conventions and Anti-patterns (e.g. `## Templates` in acf-elements) and/or a closing section: `## Tooling`, `## Working with …` or `## Related skills` |
+| `## Output checklist` | Checkbox list the agent verifies before delivering |
+| _(optional)_ | A closing section: `## Tooling`, `## Working with …` or `## Related skills` |
+
+**Reference files.** A `SKILL.md` holds the rules; long templates and examples that are only needed for part of the work move to `references/<topic>.md`, so they are read on demand instead of on every load. Split once a `SKILL.md` grows past roughly 300 lines — a small skill stays one file. In a split skill, `SKILL.md` keeps the rule itself in one or two sentences and links to the reference for the full example; each reference file opens with its own table of contents. Links are relative, so they resolve both in a project and inside this repo.
 
 The repo is laid out like a project's `.claude` directory, so it can be mounted there as a whole:
 
@@ -38,7 +46,12 @@ The repo is laid out like a project's `.claude` directory, so it can be mounted 
     ├── alpinejs/SKILL.md
     ├── gsap/SKILL.md
     ├── wordpress-theme/SKILL.md
-    └── acf-elements/SKILL.md
+    └── acf-elements/
+        ├── SKILL.md
+        └── references/
+            ├── templates.md           JSON and Blade templates
+            ├── field-patterns.md      buttons, groups, typed elements, populated fields
+            └── field-descriptions.md  default instructions and placeholders per field type
 ```
 
 ## Usage

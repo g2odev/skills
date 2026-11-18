@@ -1,6 +1,6 @@
 ---
 name: tailwindcss
-description: 'Tailwind CSS v4 conventions and best practices. Use when writing, reviewing or refactoring Tailwind classes, styling components, theming with CSS variables, responsive design, dark mode and setting up a consistent utility-first design system.'
+description: 'Tailwind CSS v4 conventions for this stack: utility-first markup, semantic oklch tokens in @theme, rem units, mobile-first breakpoints, one container per section. Use whenever writing, reviewing or refactoring styling. Trigger on: Tailwind classes in HTML or Blade, class attributes, @theme, color/font/spacing tokens, oklch, arbitrary values (m-[…]), px-to-rem, container and section layout, breakpoints (md:, lg:), dark mode, hover/focus-visible/disabled states, prose and the typography plugin, app.css or custom.scss, Gravity Forms styling, converting a design (Figma, pixel values, hex colors) into markup. Do NOT trigger for: movement, reveals and timelines (gsap), click/toggle behavior and state (alpinejs), theme PHP and Blade logic (wordpress-theme), ACF field JSON (acf-elements).'
 ---
 
 # Tailwind CSS
@@ -22,6 +22,7 @@ description: 'Tailwind CSS v4 conventions and best practices. Use when writing, 
   - [Units: rem](#units-rem)
   - [Large text blocks: prose](#large-text-blocks-prose)
 - [Anti-patterns](#anti-patterns)
+- [Output checklist](#output-checklist)
 - [Tooling](#tooling)
 
 ## Documentation
@@ -208,6 +209,21 @@ For large blocks of (CMS/markdown) text, use the [`@tailwindcss/typography` plug
 | `style=""` alongside Tailwind | Everything in classes; arbitrary values if needed |
 | Styling each element separately in long text blocks | `prose` (typography plugin) |
 | Dynamically composed classnames (`text-${color}-500`) | Full classnames, possibly via a map — otherwise purging breaks |
+
+## Output checklist
+
+Verify every item before delivering:
+
+- [ ] Every class in the markup is a real Tailwind class — no self-invented class names; JS/GSAP hooks are `data-*` attributes
+- [ ] No `@apply`, no `style=""`, no `!important`; the stylesheet holds nothing but `@theme` and the Gravity Forms styles
+- [ ] Colors and fonts go through semantic `@theme` tokens, defined in `oklch` — no hex, `rgb()` or font names in the markup
+- [ ] Design values snapped to the standard scale; an arbitrary value only when genuinely off-scale, and then in `rem`
+- [ ] A recurring arbitrary value is promoted to a `@theme` token; a repeated class set is a Blade component
+- [ ] Mobile-first: base classes are mobile, `md:`/`lg:` only scale up — `sm:` is never used to mean "mobile"
+- [ ] One container per section (`mx-auto max-w-screen-2xl px-4 sm:px-6 md:px-8`); vertical spacing and full-width `bg-*` sit on the section
+- [ ] Interactive elements have a `focus-visible:` state; `size-*` on square elements
+- [ ] Large CMS/markdown text blocks use `prose`
+- [ ] Class names are written out in full (never composed dynamically) and sorted by `prettier-plugin-tailwindcss`
 
 ## Tooling
 

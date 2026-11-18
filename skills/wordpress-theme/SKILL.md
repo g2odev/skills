@@ -1,6 +1,6 @@
 ---
 name: wordpress-theme
-description: 'WordPress theme development conventions and best practices with Roots Sage, Blade and PHP 8.4. Use when building theme templates, View Composers, hooks/filters, custom post types, enqueueing assets, escaping output, translations and WordPress-specific PHP.'
+description: 'WordPress theme conventions with Roots Sage, Blade and PHP 8.4: dumb templates, View Composers, late escaping, one text domain. Use whenever touching theme PHP or Blade. Trigger on: .blade.php, resources/views, partials, Blade components (x-button, x-svg-icon), @include, @php, app/setup.php, app/filters.php, View Composers, add_action/add_filter, WP_Query, custom post types, taxonomies, nav menus, enqueueing assets, wp_get_attachment_image, SVG icons and logos, esc_url/esc_attr/wp_kses_post, escaped versus unescaped Blade echo, translations and text domain, functions.php, g2o_ functions, the styleguide template, Yoast metabox order. Do NOT trigger for: ACF flexible-content elements and acf-json (acf-elements), Tailwind class choices (tailwindcss), plugin or WordPress core development.'
 ---
 
 # WordPress Theme (Roots Sage)
@@ -22,7 +22,9 @@ description: 'WordPress theme development conventions and best practices with Ro
   - [Custom post types & fields](#custom-post-types--fields)
   - [wp-admin](#wp-admin)
   - [External feeds & integrations](#external-feeds--integrations)
+  - [Admin defaults](#admin-defaults)
 - [Anti-patterns](#anti-patterns)
+- [Output checklist](#output-checklist)
 - [Related skills](#related-skills)
 
 ## Documentation
@@ -53,6 +55,8 @@ description: 'WordPress theme development conventions and best practices with Ro
 - Register nav menus in `app/setup.php` (`register_nav_menus(['primary_navigation' => __('Primary Navigation', 'theme-name')])`) and render them in a partial (`partials/navigation.blade.php`) — never hardcode menu items
 - The `/styleguide` page (required per project, see `AGENTS.md`) is a Blade page template: `resources/views/template-styleguide.blade.php` with a `{{-- Template Name: Styleguide --}}` header
 - Escape all output: `{{ $var }}` escapes automatically in Blade and is the default for untrusted values; `{!! !!}` is for trusted content — sanitized HTML (`wp_kses_post()`), WP titles (`get_the_title()` returns texturized entities that `{{ }}` would double-escape) and ACF element fields (trusted editor content, see the [acf-elements](../acf-elements/SKILL.md) skill). URLs and attributes always go through `esc_url()` / `esc_attr()`
+- Never wrap an escaping function in `{{ }}`: `{{ esc_url($url) }}` escapes twice, which breaks a URL containing `&`. Echo it with `{!! esc_url($url) !!}` / `{!! esc_attr($value) !!}`
+- Never mix the two `@php` forms in one file: an inline `@php(...)` followed by a `@php … @endphp` block throws a ParseError. In partials, use only the inline form
 - Always check a variable is set and not empty before outputting it:
 
 ```blade
@@ -70,6 +74,7 @@ description: 'WordPress theme development conventions and best practices with Ro
 ### Naming & comments
 
 - Follow Laravel/PSR conventions for naming: `camelCase` for variables (`$heroTitle`) and methods, `StudlyCaps` for classes — consistent with Sage/Acorn; WordPress core functions keep their own `snake_case` names
+- View files are kebab-case (`partials/key-figures.blade.php`); ACF field and layout names are snake_case (`key_figures`) — see the [acf-elements](../acf-elements/SKILL.md) skill
 - Prefix all custom functions in `functions.php` (and other global functions) with `g2o_` (e.g. `g2o_get_hero_image()`) to avoid collisions with WordPress core and plugins
 - Always wrap function definitions in a `function_exists()` check, and place a section comment block above each function:
 
@@ -109,6 +114,8 @@ class Hero extends Composer
     }
 }
 ```
+
+- Pass data to the view through `with()`. A public method on the composer reaches the view as an object, so `!empty()` and array access on it do not work.
 
 ### Queries
 
@@ -156,7 +163,7 @@ Usage — size, color and ARIA come from the caller:
 
 ### Security
 
-- Escape late: `esc_html()`, `esc_attr()`, `esc_url()` at output (or Blade's `{{ }}`)
+- Escape late: `esc_html()`, `esc_attr()`, `esc_url()` at output (or Blade's `{{ }}`) — one or the other, never both: an `esc_*()` call is echoed with `{!! !!}`
 - Sanitize early: `sanitize_text_field()`, `wp_kses_post()` on input
 - Verify nonces and capabilities (`current_user_can()`) for any form or admin action
 
@@ -201,6 +208,14 @@ A link with an external system (a property feed, a CRM) follows the same rules e
 - **Removed posts need a redirect**: the log asks for one and names the old URL; making it stays a manual job
 - **Test with the real response and with mocked ones** (`pre_http_request`): changed, removed, back again, refused, unreachable, malformed, hostile content. Field mappings built from documentation alone are wrong somewhere — compare one real object field by field as soon as there is one
 
+### Admin defaults
+
+- **ACF fields above Yoast SEO**: give the Yoast metabox a low priority in `app/filters.php`, so the ACF field groups sit at the top of the edit screen:
+
+```php
+add_filter('wpseo_metabox_prio', fn (): string => 'low');
+```
+
 ## Anti-patterns
 
 | Avoid | Do instead |
@@ -208,6 +223,9 @@ A link with an external system (a property feed, a CRM) follows the same rules e
 | Queries or logic in Blade templates | View Composers |
 | `query_posts()` | `WP_Query` + `wp_reset_postdata()` |
 | Echoing untrusted output unescaped | `{{ }}` / `esc_html()` / `esc_attr()` |
+| Double escaping (`{{ esc_url($url) }}`) | `{!! esc_url($url) !!}` / `{!! esc_attr($value) !!}` |
+| Inline `@php(...)` mixed with a `@php … @endphp` block | Only the inline form in partials |
+| Composer data through public methods | Return it from `with()` |
 | `get_field()` scattered in templates | Map fields in a View Composer |
 | Modifying core/plugin files | Actions and filters |
 | Hardcoded strings | `__('...', 'theme-name')` |
@@ -221,6 +239,24 @@ A link with an external system (a property feed, a CRM) follows the same rules e
 | An API key in the database or an on/off option for an integration | The key in `.env`; a key present means on |
 | Hotlinking media from an external service | Download, convert, rename, attach, hide from the media library |
 | Deleting or migrating stored content without a copy | `wp db export` first; write, read back, then delete |
+
+## Output checklist
+
+Verify every item before delivering:
+
+- [ ] Markup is Blade in `resources/views/`; logic is in `app/` — no queries or business logic in a template
+- [ ] View data comes from a View Composer through `with()`; no `get_field()` in templates (flexible-content partials are the exception, see acf-elements)
+- [ ] Every output is guarded with `!empty()` before it is echoed
+- [ ] Untrusted values are echoed with `{{ }}`; trusted content (sanitized HTML, WP titles, ACF element fields) with `{!! !!}`
+- [ ] `esc_url()` / `esc_attr()` are echoed with `{!! !!}`, never wrapped in `{{ }}`; rich content goes through `wp_kses_post()`
+- [ ] Only the inline `@php(...)` form in partials — never mixed with a `@php … @endphp` block
+- [ ] Global functions are prefixed `g2o_`, wrapped in `function_exists()` and carry a section comment block; PHP is typed (parameter and return types)
+- [ ] Variables and methods camelCase, classes StudlyCaps, view files kebab-case
+- [ ] Every string is translatable and uses the one text domain of the theme (its folder name), `aria-label`s included
+- [ ] Attachments are rendered with `wp_get_attachment_image()`; SVGs are a `@case` in `<x-svg-icon>`, never inline
+- [ ] Custom loops use `WP_Query` (with `no_found_rows` when not paginating) and end with `wp_reset_postdata()`
+- [ ] WordPress is extended through actions/filters in `app/` — no edits to core, plugins or the framework
+- [ ] Comments are in English
 
 ## Related skills
 

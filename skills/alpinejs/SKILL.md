@@ -1,6 +1,6 @@
 ---
 name: alpinejs
-description: 'Alpine.js conventions and best practices. Use when adding interactivity to the UI: dropdowns, modals, tabs, toggles, forms and other client-side behavior with x-data, x-on, x-show and other Alpine directives.'
+description: 'Alpine.js conventions for UI behavior: state and events declared in the markup, reusable logic in Alpine.data(), the animation itself handed to GSAP. Use whenever adding or changing client-side interactivity. Trigger on: x-data, x-show, x-if, x-on/@click, x-bind, x-model, x-ref/$refs, x-cloak, Alpine.data, Alpine.store, Alpine plugins (focus, collapse, intersect), dropdown, modal, mobile menu, tabs, accordion, toggle, aria-expanded, focus trap, closing on escape or outside click, replacing jQuery or vanilla event listeners. Do NOT trigger for: the animation itself (gsap — never x-transition), styling (tailwindcss), server-side logic (wordpress-theme).'
 ---
 
 # Alpine.js
@@ -17,6 +17,7 @@ description: 'Alpine.js conventions and best practices. Use when adding interact
   - [x-show vs x-if](#x-show-vs-x-if)
   - [Accessibility](#accessibility)
 - [Anti-patterns](#anti-patterns)
+- [Output checklist](#output-checklist)
 - [Working with GSAP](#working-with-gsap)
 
 ## Documentation
@@ -107,6 +108,20 @@ Use modifiers instead of custom logic: `@click.outside`, `@keydown.escape`, `@su
 | `x-html` with untrusted data | `x-text` |
 | jQuery or vanilla event listeners alongside Alpine | Everything via `x-on` |
 | `x-transition` for show/hide animations | GSAP — all animations go through one system (see [gsap skill](../gsap/SKILL.md)) |
+
+## Output checklist
+
+Verify every item before delivering:
+
+- [ ] Behavior lives in `x-` directives on the element — no separate script with `querySelector` or manual event listeners
+- [ ] Anything beyond trivial state is an `Alpine.data()` component, registered inside `alpine:init`; shared state is an `Alpine.store()`
+- [ ] Alpine and its plugins are imported in `resources/js/app.js` (no CDN tag) and registered before `Alpine.start()`
+- [ ] Short syntax: `@` for events, `:` for bindings; elements reached through `x-ref` / `$refs`
+- [ ] Event modifiers (`.outside`, `.escape`, `.prevent`, `.debounce`) instead of hand-written logic
+- [ ] Clickable things are `<button>` or `<a>`, never `<div @click>`, and carry a `focus-visible:` state
+- [ ] ARIA is bound to state (`:aria-expanded="open"`); modals trap focus with `x-trap` and close on `@keydown.escape.window`
+- [ ] No `x-html` with untrusted data
+- [ ] No `x-transition` — show/hide animation is done with GSAP inside the component
 
 ## Working with GSAP
 

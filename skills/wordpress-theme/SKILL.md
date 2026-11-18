@@ -1,6 +1,6 @@
 ---
 name: wordpress-theme
-description: 'WordPress theme development conventions and best practices with Roots Sage, Blade and PHP 8.4. Use when building theme templates, View Composers, hooks/filters, custom post types, enqueueing assets, escaping output, translations and WordPress-specific PHP.'
+description: 'WordPress theme conventions with Roots Sage, Blade and PHP 8.4: dumb templates, View Composers, late escaping, one text domain. Use whenever touching theme PHP or Blade. Trigger on: .blade.php, resources/views, partials, Blade components (x-button, x-svg-icon), @include, @php, app/setup.php, app/filters.php, View Composers, add_action/add_filter, WP_Query, custom post types, taxonomies, nav menus, enqueueing assets, wp_get_attachment_image, SVG icons and logos, esc_url/esc_attr/wp_kses_post, escaped versus unescaped Blade echo, translations and text domain, functions.php, g2o_ functions, the styleguide template, Yoast metabox order. Do NOT trigger for: ACF flexible-content elements and acf-json (acf-elements), Tailwind class choices (tailwindcss), plugin or WordPress core development.'
 ---
 
 # WordPress Theme (Roots Sage)
@@ -22,6 +22,7 @@ description: 'WordPress theme development conventions and best practices with Ro
   - [Custom post types & fields](#custom-post-types--fields)
   - [Admin defaults](#admin-defaults)
 - [Anti-patterns](#anti-patterns)
+- [Output checklist](#output-checklist)
 - [Related skills](#related-skills)
 
 ## Documentation
@@ -199,6 +200,24 @@ add_filter('wpseo_metabox_prio', fn (): string => 'low');
 | More than one text domain in a theme | One domain — the theme folder name — in every translation call |
 | Manual `<img>` tags for attachments | `wp_get_attachment_image()` |
 | Inline `<svg>` pasted into partials, or loose `.svg` files | A `@case` in the `<x-svg-icon>` component |
+
+## Output checklist
+
+Verify every item before delivering:
+
+- [ ] Markup is Blade in `resources/views/`; logic is in `app/` — no queries or business logic in a template
+- [ ] View data comes from a View Composer through `with()`; no `get_field()` in templates (flexible-content partials are the exception, see acf-elements)
+- [ ] Every output is guarded with `!empty()` before it is echoed
+- [ ] Untrusted values are echoed with `{{ }}`; trusted content (sanitized HTML, WP titles, ACF element fields) with `{!! !!}`
+- [ ] `esc_url()` / `esc_attr()` are echoed with `{!! !!}`, never wrapped in `{{ }}`; rich content goes through `wp_kses_post()`
+- [ ] Only the inline `@php(...)` form in partials — never mixed with a `@php … @endphp` block
+- [ ] Global functions are prefixed `g2o_`, wrapped in `function_exists()` and carry a section comment block; PHP is typed (parameter and return types)
+- [ ] Variables and methods camelCase, classes StudlyCaps, view files kebab-case
+- [ ] Every string is translatable and uses the one text domain of the theme (its folder name), `aria-label`s included
+- [ ] Attachments are rendered with `wp_get_attachment_image()`; SVGs are a `@case` in `<x-svg-icon>`, never inline
+- [ ] Custom loops use `WP_Query` (with `no_found_rows` when not paginating) and end with `wp_reset_postdata()`
+- [ ] WordPress is extended through actions/filters in `app/` — no edits to core, plugins or the framework
+- [ ] Comments are in English
 
 ## Related skills
 

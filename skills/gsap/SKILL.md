@@ -1,6 +1,6 @@
 ---
 name: gsap
-description: 'GSAP conventions and best practices for animations. Use when creating animations, transitions, scroll animations (ScrollTrigger), timelines, hover effects and micro-interactions. Build all animations with GSAP, not with CSS animations.'
+description: 'GSAP conventions for all animation: data-* hooks, transform and opacity, timelines, ScrollTrigger, reduced motion. Use whenever something moves, reveals or animates. Trigger on: gsap.to/from/fromTo/set, gsap.timeline, ScrollTrigger, scrub, stagger, easing, data-animate, entrance or reveal animations, scroll animations, parallax, page-load sequences, accordion or menu open/close animation, gsap.context, gsap.matchMedia, prefers-reduced-motion, replacing CSS @keyframes or x-transition. Do NOT trigger for: simple hover/focus color or opacity changes on buttons and links (Tailwind transition-* classes, see tailwindcss), state and events (alpinejs).'
 ---
 
 # GSAP
@@ -18,6 +18,7 @@ description: 'GSAP conventions and best practices for animations. Use when creat
   - [Cleanup](#cleanup)
   - [Accessibility](#accessibility)
 - [Anti-patterns](#anti-patterns)
+- [Output checklist](#output-checklist)
 - [Working with Alpine.js](#working-with-alpinejs)
 
 ## Documentation
@@ -116,6 +117,20 @@ gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
 | ScrollTrigger per element in a loop without cleanup | `gsap.context()` + `stagger` |
 | Animating without a reduced-motion check | `gsap.matchMedia()` |
 | Writing your own `setInterval`/`requestAnimationFrame` | `gsap.ticker` or tweens |
+
+## Output checklist
+
+Verify every item before delivering:
+
+- [ ] Every real animation runs through GSAP — no CSS `@keyframes`, no `x-transition`; only hover/focus color/opacity changes use Tailwind `transition-*`
+- [ ] Targets are `data-*` attributes (`[data-animate="…"]`), never HTML classes
+- [ ] Only `transform` properties (`x`, `y`, `scale`, `rotation`) and `opacity` are animated — the one exception is the `height` of a collapsing panel
+- [ ] Sequences are a timeline with `defaults` and position parameters, not tweens with stacked `delay`s
+- [ ] ScrollTriggers have an explicit `start`/`end`; no `markers: true` left in the code
+- [ ] The end state is in the markup (`.from()` / `gsap.set()`), so the page is correct without JavaScript
+- [ ] Everything is wrapped in `gsap.matchMedia()` with `(prefers-reduced-motion: no-preference)`
+- [ ] Dynamic content cleans up through `gsap.context()` + `ctx.revert()`
+- [ ] Plugins are registered with `gsap.registerPlugin()`; no hand-written `setInterval` / `requestAnimationFrame` loops
 
 ## Working with Alpine.js
 

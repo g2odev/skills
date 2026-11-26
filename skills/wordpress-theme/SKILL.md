@@ -75,6 +75,7 @@ description: 'WordPress theme conventions with Roots Sage, Blade and PHP 8.4: du
 
 - Follow Laravel/PSR conventions for naming: `camelCase` for variables (`$heroTitle`) and methods, `StudlyCaps` for classes — consistent with Sage/Acorn; WordPress core functions keep their own `snake_case` names
 - View files are kebab-case (`partials/key-figures.blade.php`); ACF field and layout names are snake_case (`key_figures`) — see the [acf-elements](../acf-elements/SKILL.md) skill
+- Name everything in the markup in English: `id`s, `data-*` attribute names and values, Blade component names and props, Alpine names, and any non-Tailwind class name (custom Gravity Forms field classes) — `id="contact"`, `data-animate="hero-title"`, never `id="contactformulier"`. Only content the visitor or editor reads (text, `alt`, `aria-label`) is in the site's language, and goes through a translation call
 - Prefix all custom functions in `functions.php` (and other global functions) with `g2o_` (e.g. `g2o_get_hero_image()`) to avoid collisions with WordPress core and plugins
 - Always wrap function definitions in a `function_exists()` check, and place a section comment block above each function:
 
@@ -228,6 +229,7 @@ add_filter('wpseo_metabox_prio', fn (): string => 'low');
 | Composer data through public methods | Return it from `with()` |
 | `get_field()` scattered in templates | Map fields in a View Composer |
 | Modifying core/plugin files | Actions and filters |
+| Dutch `id`s, `data-*` values or other names in the markup (`id="contactformulier"`) | English names (`id="contact"`); only visible content is in the site's language |
 | Hardcoded strings | `__('...', 'theme-name')` |
 | More than one text domain in a theme | One domain — the theme folder name — in every translation call |
 | Manual `<img>` tags for attachments | `wp_get_attachment_image()` |
@@ -252,6 +254,7 @@ Verify every item before delivering:
 - [ ] Only the inline `@php(...)` form in partials — never mixed with a `@php … @endphp` block
 - [ ] Global functions are prefixed `g2o_`, wrapped in `function_exists()` and carry a section comment block; PHP is typed (parameter and return types)
 - [ ] Variables and methods camelCase, classes StudlyCaps, view files kebab-case
+- [ ] Every `id`, `data-*` attribute, component, prop and non-Tailwind class name in the markup is English
 - [ ] Every string is translatable and uses the one text domain of the theme (its folder name), `aria-label`s included
 - [ ] Attachments are rendered with `wp_get_attachment_image()`; SVGs are a `@case` in `<x-svg-icon>`, never inline
 - [ ] Custom loops use `WP_Query` (with `no_found_rows` when not paginating) and end with `wp_reset_postdata()`

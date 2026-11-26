@@ -47,6 +47,7 @@ These are the always-on rules; the skills above hold the detail and the examples
 - Use `prose` (`@tailwindcss/typography`) for large text blocks such as CMS or markdown content
 - Always write comments in English
 - Use English naming for files, folders, variables and functions
+- Name everything in the markup in English too: `id`s, `data-*` attribute names and values (`data-animate="hero-title"`), Alpine component, state and `x-ref` names, Blade component names and props, and the few class names that are not Tailwind (custom Gravity Forms field classes) — `id="contact"`, not `id="contactformulier"`. Only content the visitor or editor reads (text, `alt`, `aria-label`, ACF labels) is in the site's language
 - Use Blade templates (`resources/views/`) for all theme markup; extract repeated markup into Blade partials/components (`@include`, `<x-component>`)
 - Put theme logic in `app/` (View Composers, filters, setup) — keep Blade templates free of business logic
 

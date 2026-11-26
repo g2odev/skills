@@ -114,24 +114,13 @@ In a WordPress theme this anchor div is the `<x-element-id>` component — see t
 - Always mobile-first: base classes are for mobile; use `md:`/`lg:` only to scale up
 - Never use `sm:` to target "mobile" — that is desktop-first thinking
 
-## Styleguide
-
-- Every project includes a styleguide page (e.g. `/styleguide`) showcasing all base elements:
-  - Titles/headings (`h1`–`h6`)
-  - Colors (all semantic tokens from `@theme`)
-  - Text styles (paragraphs, links, lists, `prose` blocks)
-  - Buttons (variants and states: hover, focus-visible, disabled)
-  - Form elements (inputs, selects, checkboxes, radios, validation states)
-- Build new components on the styleguide first; this keeps the design system consistent and reusable
-
 ## Forms (Gravity Forms)
 
 Forms are converted to Gravity Forms, which renders its own markup — you cannot add Tailwind classes to it directly. Therefore:
 
 - Disable the Gravity Forms default styling (`gform_disable_css`) and style from scratch
 - Style Gravity Forms output centrally in `app.css` by targeting the GF classes (`.gform_wrapper`, `.gfield`, `.gform_button`, ...) — this is the accepted exception to the "no custom CSS" rule
-- Use only semantic tokens from `@theme` in these styles; keep them in sync with the form elements on the styleguide
-- Build form styles on the styleguide first with native elements, mirroring the Gravity Forms markup structure, so the styleguide and GF forms always match
+- Use only semantic tokens from `@theme` in these styles
 - Where possible, add custom CSS classes per field/button in the Gravity Forms editor (or via the `gform_field_css_class` filter) instead of writing extra selectors
 - Style error and success states explicitly, using semantic tokens (e.g. `--color-error`, `--color-success`) from `@theme`:
   - Field validation errors (`.gfield_error`, `.validation_message`)

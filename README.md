@@ -6,7 +6,7 @@ A collection of agent skills and instructions for building WordPress themes (Roo
 
 | Item | Description |
 |---|---|
-| [AGENTS.md](AGENTS.md) | Always-on agent instructions: tech stack (Tailwind, Alpine, GSAP, Sage/WordPress), rules, layout, responsive, styleguide, Gravity Forms, accessibility and image conventions. Loaded in a project through `CLAUDE.md` (see [Usage](#usage)). |
+| [AGENTS.md](AGENTS.md) | Always-on agent instructions: tech stack (Tailwind, Alpine, GSAP, Sage/WordPress), rules, layout, responsive, Gravity Forms, accessibility and image conventions. Loaded in a project through `CLAUDE.md` (see [Usage](#usage)). |
 | [tailwindcss](skills/tailwindcss/SKILL.md) | Tailwind CSS v4 conventions and best practices |
 | [alpinejs](skills/alpinejs/SKILL.md) | Alpine.js conventions and best practices |
 | [gsap](skills/gsap/SKILL.md) | GSAP animation conventions and best practices |

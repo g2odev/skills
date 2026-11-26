@@ -1,6 +1,6 @@
 ---
 name: wordpress-theme
-description: 'WordPress theme conventions with Roots Sage, Blade and PHP 8.4: dumb templates, View Composers, late escaping, one text domain. Use whenever touching theme PHP or Blade. Trigger on: .blade.php, resources/views, partials, Blade components (x-button, x-svg-icon), @include, @php, app/setup.php, app/filters.php, View Composers, add_action/add_filter, WP_Query, custom post types, taxonomies, nav menus, enqueueing assets, wp_get_attachment_image, SVG icons and logos, esc_url/esc_attr/wp_kses_post, escaped versus unescaped Blade echo, translations and text domain, functions.php, g2o_ functions, the styleguide template, Yoast metabox order. Do NOT trigger for: ACF flexible-content elements and acf-json (acf-elements), Tailwind class choices (tailwindcss), plugin or WordPress core development.'
+description: 'WordPress theme conventions with Roots Sage, Blade and PHP 8.5: dumb templates, View Composers, late escaping, one text domain. Use whenever touching theme PHP or Blade. Trigger on: .blade.php, resources/views, partials, Blade components (x-button, x-svg-icon), @include, @php, app/setup.php, app/filters.php, View Composers, add_action/add_filter, WP_Query, custom post types, taxonomies, nav menus, enqueueing assets, wp_get_attachment_image, SVG icons and logos, esc_url/esc_attr/wp_kses_post, escaped versus unescaped Blade echo, translations and text domain, functions.php, g2o_ functions, the styleguide template, Yoast metabox order. Do NOT trigger for: ACF flexible-content elements and acf-json (acf-elements), Tailwind class choices (tailwindcss), plugin or WordPress core development.'
 ---
 
 # WordPress Theme (Roots Sage)
@@ -43,7 +43,7 @@ description: 'WordPress theme conventions with Roots Sage, Blade and PHP 8.4: du
 
 1. **Sage structure** — Blade templates in `resources/views/`, logic in `app/`, assets via Vite. Never raw PHP templates in the theme root. The theme's custom stylesheet (`resources/css/app.css` / `custom.scss`) stays as empty as possible: styling lives as Tailwind classes in the Blade markup (existing classes first, arbitrary values otherwise) — in practice only the Gravity Forms styles belong in the stylesheet.
 2. **Templates stay dumb** — no queries or business logic in Blade. Prepare data in View Composers (`app/View/Composers/`); templates only display it.
-3. **Modern PHP 8.4** — typed properties, return types, enums, `match`, named arguments, constructor property promotion. No legacy array-style config where a typed class works.
+3. **Modern PHP 8.5** — typed properties, return types, enums, `match`, named arguments, constructor property promotion. No legacy array-style config where a typed class works.
 4. **Hook into WordPress, never hack it** — use actions/filters in `app/setup.php` or `app/filters.php`; never modify core, plugins or the parent framework.
 
 ## Conventions

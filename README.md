@@ -1,6 +1,6 @@
 # Skills
 
-A collection of agent skills and instructions for building WordPress themes (Roots Sage, PHP 8.4) with Tailwind CSS, Alpine.js and GSAP.
+A collection of agent skills and instructions for building WordPress themes (Roots Sage, PHP 8.5) with Tailwind CSS, Alpine.js and GSAP.
 
 ## Contents
 
@@ -10,7 +10,7 @@ A collection of agent skills and instructions for building WordPress themes (Roo
 | [tailwindcss](skills/tailwindcss/SKILL.md) | Tailwind CSS v4 conventions and best practices |
 | [alpinejs](skills/alpinejs/SKILL.md) | Alpine.js conventions and best practices |
 | [gsap](skills/gsap/SKILL.md) | GSAP animation conventions and best practices |
-| [wordpress-theme](skills/wordpress-theme/SKILL.md) | WordPress theme development with Sage, Blade and PHP 8.4 |
+| [wordpress-theme](skills/wordpress-theme/SKILL.md) | WordPress theme development with Sage, Blade and PHP 8.5 |
 | [acf-elements](skills/acf-elements/SKILL.md) | Make Blade elements manageable through ACF flexible content via local JSON |
 
 ## Structure

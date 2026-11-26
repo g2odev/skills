@@ -7,7 +7,7 @@ Always build with the following stack:
 - **Styling**: Tailwind CSS — no custom CSS or other CSS frameworks
 - **Interactivity**: Alpine.js — no jQuery, React or Vue
 - **Animations**: GSAP — no CSS animations or other animation libraries
-- **Target platform**: most projects ship as WordPress themes on PHP 8.4 — write modern PHP (typed properties, enums, match, named arguments)
+- **Target platform**: most projects ship as WordPress themes on PHP 8.5 — write modern PHP (typed properties, enums, match, named arguments)
 - **Theme framework**: themes are based on [Roots Sage](https://roots.io/sage/) — Blade templates for all markup, Composer for PHP dependencies, Vite for the asset pipeline
 
 ## Documentation
@@ -26,7 +26,7 @@ Detailed conventions and best practices per tool:
 - [tailwindcss](skills/tailwindcss/SKILL.md) — Tailwind CSS v4 conventions and best practices
 - [alpinejs](skills/alpinejs/SKILL.md) — Alpine.js conventions and best practices
 - [gsap](skills/gsap/SKILL.md) — GSAP animation conventions and best practices
-- [wordpress-theme](skills/wordpress-theme/SKILL.md) — WordPress theme development with Sage, Blade and PHP 8.4
+- [wordpress-theme](skills/wordpress-theme/SKILL.md) — WordPress theme development with Sage, Blade and PHP 8.5
 - [acf-elements](skills/acf-elements/SKILL.md) — ACF flexible-content elements made manageable via local JSON, generated from Blade partials
 
 ## Rules
